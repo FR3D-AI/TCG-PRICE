@@ -183,3 +183,19 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .sig-legend .up { color: #22c55e; } .sig-legend .down { color: #ef4444; } .sig-legend .neutral { color: #eab308; }
 .sig.up, .sig.down, .sig.neutral { color: var(--text); }
 .sig.up b { color: #16a34a; } .sig.down b { color: #dc2626; } .sig.neutral b { color: #ca8a04; }
+
+/* Imagen de carta y foto sustituta */
+.pic { position: relative; display: block; width: 100%; aspect-ratio: 63/88; border-radius: 7px; overflow: hidden; background: var(--panel2); }
+.pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pic.big { border-radius: 9px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.pic.none { border: 2px dashed var(--line); }
+.pic-add { all: unset; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; color: var(--muted); text-align: center; }
+.pic-add b { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 1.5rem; line-height: 1; }
+.pic.big .pic-add b { width: 52px; height: 52px; font-size: 2rem; }
+.pic-add small { font-size: .7rem; font-weight: 600; }
+.pic.sub em { position: absolute; left: 4px; bottom: 4px; font-style: normal; font-size: .62rem; font-weight: 700; background: rgba(0,0,0,.65); color: #fff; padding: 2px 6px; border-radius: 6px; }
+.pic-btn { position: absolute; top: 6px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 1rem; cursor: pointer; right: 40px; }
+.pic-btn.del { right: 6px; }
+.tile .pic { border-radius: 7px; }
+.version .pic { width: 44px; border-radius: 4px; }
+.card-head .pic { width: 100%; }

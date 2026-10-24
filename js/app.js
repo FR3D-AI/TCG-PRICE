@@ -4,6 +4,7 @@ import { scanCard } from './scan.js';
 import { identify, searchText } from './identify.js';
 import { renderTimeline } from './timeline.js';
 import { renderSignals } from './signals.js';
+import { cardPic, initPhotos } from './photos.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -27,6 +28,7 @@ function remember(card) {
 }
 
 // ---------- router ----------
+initPhotos();
 window.addEventListener('hashchange', route);
 route();
 
@@ -77,7 +79,7 @@ function viewHome() {
 
 function cardTile(c) {
   return `<a class="tile" href="#/carta/${encodeURIComponent(c.id)}">
-    <img loading="lazy" src="${img(c.image)}" alt="">
+    ${cardPic(c.id, c.image)}
     <span>${esc(c.nameEs || c.name || c.id)}</span><small>${esc(c.id)}</small></a>`;
 }
 
@@ -136,7 +138,7 @@ async function viewCard(id) {
   app.innerHTML = `
     <article class="card-view">
       <header class="card-head">
-        <img src="${img(card.image, 'high')}" alt="${esc(card.name)}">
+        ${cardPic(id, card.image, 'high')}
         <div>
           <h1>${esc(es?.name || card.name)}</h1>
           ${es && es.name !== card.name ? `<p class="muted">${esc(card.name)} (inglés)</p>` : ''}
@@ -303,7 +305,7 @@ async function loadVersions(card, fx) {
       <h3>Cada impresión</h3>
       <div class="versions">${rows.map(r => `
         <a class="version ${r.id === card.id ? 'current' : ''}" href="#/carta/${encodeURIComponent(r.id)}">
-          <img loading="lazy" src="${img(r.image)}" alt="">
+          ${cardPic(r.id, r.image)}
           <div><b>${esc(r.set)}</b><small>Nº ${esc(r.localId)} · ${esc(r.rarity)}</small></div>
           <span>${fmt.clp(r.usd != null ? r.usd * fx.CLP : null)}<small>${fmt.usd(r.usd)}</small></span>
         </a>`).join('')}</div>
