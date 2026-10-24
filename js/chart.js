@@ -17,7 +17,7 @@ export function lineChart(series, fmtValue) {
   const X = v => L + (v - x0) / Math.max(x1 - x0, 1) * (W - L - R);
   const Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
 
-  let grid = '';
+  let grid = `<text x="4" y="${T + 4}" class="axis">USD</text>`;
   for (let i = 0; i <= 4; i++) {
     const v = y0 + (y1 - y0) * i / 4, y = Y(v);
     grid += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" class="grid"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" class="axis">${fmtValue(v)}</text>`;

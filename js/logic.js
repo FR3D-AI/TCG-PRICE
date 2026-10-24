@@ -245,8 +245,8 @@ export function spanishEstimate(entries, fx, globalUsd) {
 
 // ---------- Formato ----------
 export const fmt = {
-  usd: v => v == null ? '—' : `US$${v.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-  eur: v => v == null ? '—' : `€${v.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-  clp: v => v == null ? '—' : `$${Math.round(v).toLocaleString('es-CL')}`,
+  usd: v => v == null ? '—' : `$${v.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`,
+  eur: v => v == null ? '—' : `€${v.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`,
+  clp: v => v == null ? '—' : `$${Math.round(v).toLocaleString('es-CL')} CLP`,
   pct: v => v == null ? '—' : `${v > 0 ? '+' : ''}${v.toFixed(0)}%`,
 };
