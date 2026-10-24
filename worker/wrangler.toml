@@ -1,0 +1,6 @@
+name = "tasador-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Secreto opcional para precios japoneses (no lo pongas aquí):
+#   npx wrangler secret put PPT_KEY

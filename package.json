@@ -1,0 +1,9 @@
+{
+  "name": "tasador-tcg",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/logic.test.mjs",
+    "snapshot": "node scripts/snapshot.mjs"
+  }
+}

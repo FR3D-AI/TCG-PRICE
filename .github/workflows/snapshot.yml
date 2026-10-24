@@ -1,0 +1,32 @@
+name: Historial diario de precios
+
+on:
+  schedule:
+    - cron: '23 11 * * *'   # todos los días ~08:23 hora de Chile
+  workflow_dispatch:         # botón "Run workflow" para probarlo a mano
+  push:
+    paths: ['data/watchlist.json']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/snapshot.mjs
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/history
+          git diff --cached --quiet || git commit -m "Precios del $(date -u +%F)"
+          git push
