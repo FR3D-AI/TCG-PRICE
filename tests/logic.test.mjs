@@ -97,3 +97,20 @@ test('línea de tiempo: detecta subidas, bajadas y el salto hasta hoy', () => {
   assert.match(ex.text, /lanzamiento/);
   assert.match(ex.text, /Set X/);
 });
+
+import { computeSignals, analogReaction } from '../js/signals.js';
+
+test('señales: reacción histórica y veredicto con colores', () => {
+  const pts = [
+    { date: '2024-01-05', usd: 100 }, { date: '2024-01-15', usd: 102 },
+    { date: '2024-02-15', usd: 80 }, { date: '2024-03-10', usd: 78 },
+  ];
+  const an = analogReaction(pts, ['2024-01-26']);
+  assert.equal(an.n, 1);
+  assert.ok(an.avgPct < -15);
+  const recent = computeSignals({ card: { dexId: [999], rarity: 'Double rare', regulationMark: 'I' }, today: '2026-10-24', releaseDate: '2026-08-01', upcoming: [], analog: null, momentumPct: -12 });
+  assert.equal(recent.verdict, 'down');
+  const iconic = computeSignals({ card: { dexId: [6], rarity: 'Rare Holo' }, today: '2026-10-24', releaseDate: '1999-01-09', upcoming: [{ date: '2026-09-01', set: 'X', name: 'Charizard', jp: true }], analog: { n: 3, avgPct: 12 }, momentumPct: 8 });
+  assert.equal(iconic.verdict, 'up');
+  assert.equal(iconic.label, 'Posible alza');
+});

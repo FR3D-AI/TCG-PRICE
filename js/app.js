@@ -3,6 +3,7 @@ import { getConfig, setConfig } from './config.js';
 import { scanCard } from './scan.js';
 import { identify, searchText } from './identify.js';
 import { renderTimeline } from './timeline.js';
+import { renderSignals } from './signals.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -163,6 +164,7 @@ async function viewCard(id) {
       </section>
 
       <section class="card-box" id="hist"><h2>Cómo ha cambiado su valor</h2><div class="center"><div class="spinner"></div></div></section>
+      <section class="card-box" id="signals"></section>
       <section class="card-box" id="es-box"></section>
       <section class="card-box" id="versions"><h2>Todas sus versiones</h2><div class="center"><div class="spinner"></div><p class="muted">Buscando otras impresiones…</p></div></section>
       <section class="card-box" id="jp" hidden></section>
@@ -199,6 +201,7 @@ async function loadHistory(card, fx) {
       <p>Todavía no hay historial gratuito de ventas para esta carta. El archivo público cubre sets en inglés hasta septiembre 2024.</p>
       <p class="muted">Síguela (botón de abajo) y la app guardará su precio cada día desde hoy.</p>`;
     renderTimeline($('#timeline'), card, fx, series, now);
+    renderSignals($('#signals'), card, fx, series, now);
     return;
   }
   const points = series.flatMap(s => s.points);
@@ -214,6 +217,7 @@ async function loadHistory(card, fx) {
     </tbody></table>
     <p class="note">Precios en USD de ventas en TCGplayer. Se descartan ventas sueltas muy fuera de rango. El archivo público llega hasta sep 2024; desde que la sigues, se suma tu historial diario.</p>`;
   renderTimeline($('#timeline'), card, fx, series, now);
+  renderSignals($('#signals'), card, fx, series, now);
 }
 
 // ---------- valor en español ----------

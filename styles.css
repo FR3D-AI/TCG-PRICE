@@ -159,3 +159,27 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .tl-notes li.down::marker, .tl-notes li.down b { color: var(--down); }
 .tl-notes p { margin: 2px 0 4px; font-size: .88rem; }
 .tl-notes a { color: var(--c2); }
+
+/* Señales a futuro */
+.sig-verdict { display: flex; align-items: center; gap: 12px; border-radius: 14px; padding: 12px 14px; color: #fff; }
+.sig-verdict.up { background: linear-gradient(135deg, #15803d, #22c55e); }
+.sig-verdict.down { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+.sig-verdict.neutral { background: linear-gradient(135deg, #a16207, #eab308); }
+.sig-verdict strong { display: block; font-size: 1.35rem; line-height: 1.2; }
+.sig-verdict small { opacity: .9; }
+.sig-arrow { font-size: 2.2rem; font-weight: 800; line-height: 1; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; }
+.sig-gauge { position: relative; height: 10px; border-radius: 10px; margin: 14px 0 4px; background: linear-gradient(90deg, #ef4444, #eab308 50%, #22c55e); }
+.sig-gauge i { position: absolute; top: -5px; width: 20px; height: 20px; border-radius: 50%; background: var(--panel); border: 3px solid var(--text); transform: translateX(-50%); }
+.sig-scale { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 10px; }
+.sig-list { display: flex; flex-direction: column; gap: 8px; }
+.sig { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 10px; border-radius: 12px; border-left: 4px solid; background: var(--panel2); }
+.sig.up { border-color: #22c55e; } .sig.down { border-color: #ef4444; } .sig.neutral { border-color: #eab308; }
+.sig-ico { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; }
+.sig.up .sig-ico { background: #22c55e; } .sig.down .sig-ico { background: #ef4444; } .sig.neutral .sig-ico { background: #eab308; }
+.sig b { font-size: .92rem; }
+.sig p { margin: 3px 0; font-size: .85rem; }
+.sig small { color: var(--muted); font-size: .72rem; }
+.sig-legend { display: flex; gap: 14px; font-size: .78rem; margin-top: 10px; font-weight: 700; }
+.sig-legend .up { color: #22c55e; } .sig-legend .down { color: #ef4444; } .sig-legend .neutral { color: #eab308; }
+.sig.up, .sig.down, .sig.neutral { color: var(--text); }
+.sig.up b { color: #16a34a; } .sig.down b { color: #dc2626; } .sig.neutral b { color: #ca8a04; }
