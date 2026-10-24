@@ -2,7 +2,7 @@ import { tcgdex, archiveHistory, ownHistory, fxRates, pool, workerInfo, japanese
 import { getConfig, setConfig } from './config.js';
 import { scanCard } from './scan.js';
 import { identify, searchText } from './identify.js';
-import { lineChart } from './chart.js';
+import { renderTimeline } from './timeline.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -193,24 +193,27 @@ async function loadHistory(card, fx) {
   const series = [];
   if (a) series.push({ label: `Archivo TCGplayer · ${a.label}`, points: dropOutliers(a.points) });
   if (o) series.push(o);
+  const now = referenceUsd(summarizePricing(card.pricing), fx);
   if (!series.length) {
-    box.innerHTML = `<h2>Cómo ha cambiado su valor</h2>
-      <p>Todavía no hay historial gratuito para esta carta. El archivo público cubre sets en inglés hasta septiembre 2024.</p>
+    box.innerHTML = `<h2>Cómo ha cambiado su valor</h2><div id="timeline"></div>
+      <p>Todavía no hay historial gratuito de ventas para esta carta. El archivo público cubre sets en inglés hasta septiembre 2024.</p>
       <p class="muted">Síguela (botón de abajo) y la app guardará su precio cada día desde hoy.</p>`;
+    renderTimeline($('#timeline'), card, fx, series, now);
     return;
   }
   const points = series.flatMap(s => s.points);
   const rows = yearly(points);
-  const now = referenceUsd(summarizePricing(card.pricing), fx);
   const lastYear = rows[rows.length - 1];
   const vsNow = now != null && lastYear ? (now / lastYear.avg - 1) * 100 : null;
   box.innerHTML = `<h2>Cómo ha cambiado su valor</h2>
-    ${lineChart(series.map(s => ({ label: s.label, points: weekly(s.points).map(p => ({ date: p.date, value: p.usd })) })), v => '$' + (v >= 100 ? Math.round(v) : v.toFixed(1)))}
+    <div id="timeline"></div>
+    <h3>Resumen por año</h3>
     <table><thead><tr><th>Año</th><th>Promedio</th><th>Mín – Máx</th><th>Cambio</th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${r.year}</td><td><b>${fmt.usd(r.avg)}</b></td><td>${fmt.usd(r.min)} – ${fmt.usd(r.max)}</td><td class="${r.changePct > 0 ? 'up' : r.changePct < 0 ? 'down' : ''}">${fmt.pct(r.changePct)}</td></tr>`).join('')}
       ${now != null ? `<tr class="now"><td>Hoy</td><td><b>${fmt.usd(now)}</b></td><td>mercado actual</td><td class="${vsNow > 0 ? 'up' : vsNow < 0 ? 'down' : ''}">${fmt.pct(vsNow)}</td></tr>` : ''}
     </tbody></table>
     <p class="note">Precios en USD de ventas en TCGplayer. Se descartan ventas sueltas muy fuera de rango. El archivo público llega hasta sep 2024; desde que la sigues, se suma tu historial diario.</p>`;
+  renderTimeline($('#timeline'), card, fx, series, now);
 }
 
 // ---------- valor en español ----------

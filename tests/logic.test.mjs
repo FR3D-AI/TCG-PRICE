@@ -79,3 +79,21 @@ test('valor en español: prioridad y respaldo', () => {
   assert.equal(none.fallback, true);
   assert.equal(none.value, 50000);
 });
+
+import { detectMoves, explainMove, monthly } from '../js/timeline.js';
+
+test('línea de tiempo: detecta subidas, bajadas y el salto hasta hoy', () => {
+  const pts = [];
+  const months = ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07'];
+  const vals = [100, 98, 60, 55, 54, 90, 95];
+  months.forEach((m, i) => pts.push({ date: `${m}-10`, usd: vals[i] }));
+  assert.equal(monthly(pts).length, 7);
+  const moves = detectMoves(pts, 300, '2026-10-24');
+  assert.equal(moves[0].dir, 'down');
+  assert.ok(moves.some(m => m.dir === 'up' && !m.gap));
+  assert.ok(moves.some(m => m.gap && m.dir === 'up'));
+  const ex = explainMove(moves[0], [{ type: 'reprint', date: '2023-03-01', set: 'Set X' }], '2022-12-01');
+  assert.match(ex.head, /^Bajó/);
+  assert.match(ex.text, /lanzamiento/);
+  assert.match(ex.text, /Set X/);
+});
