@@ -72,7 +72,8 @@ export function explainMove(move, events, releaseDate) {
   const rot = near.find(e => e.type === 'rotation');
   const reps = near.filter(e => e.type === 'reprint');
   const months = Math.round((ts(move.to) - ts(move.from)) / (30 * DAY));
-  const span = move.gap ? `entre ${monthLabel(move.from)} y ${move.to === iso(Date.now()) ? 'hoy' : monthLabel(move.to)}` : `en ${Math.max(months, 1)} ${months === 1 ? 'mes' : 'meses'}`;
+  const toToday = Date.now() - ts(move.to) < 32 * DAY;
+  const span = move.gap ? `entre ${monthLabel(move.from)} y ${toToday ? 'hoy' : monthLabel(move.to)}` : `en ${Math.max(months, 1)} ${months === 1 ? 'mes' : 'meses'}`;
   const head = `${move.dir === 'up' ? 'Subió' : 'Bajó'} ${fmt.pct(move.pct)} ${span}`;
   const reasons = [];
   if (releaseDate && move.dir === 'down' && ts(move.from) - ts(releaseDate) < 200 * DAY) {
@@ -80,6 +81,13 @@ export function explainMove(move, events, releaseDate) {
   }
   if (releaseDate && move.dir === 'up' && ts(move.from) - ts(releaseDate) < 200 * DAY) {
     reasons.push('El set dejó de estar en preventa y bajó la oferta de copias nuevas: suele recuperar valor a los meses del lanzamiento.');
+  }
+  if (move.gap) {
+    const inGap = events.filter(e => e.date >= move.from && e.date <= move.to);
+    reasons.push('No hay datos gratuitos de ese período, así que el cambio se ve como un salto.');
+    if (inGap.length) reasons.push(`En ese tiempo ocurrió: ${inGap.map(e => `${e.title.replace(/ \(fecha aprox\.\)/, '')} (${monthLabel(e.date)})`).join('; ')}.`);
+    reasons.push('Para saber la causa exacta, usa “Investigar con Claude”.');
+    return { head, text: reasons.join(' ') };
   }
   if (rot) reasons.push(move.dir === 'down'
     ? 'Coincide con la rotación del formato Standard: deja de usarse en torneos y baja la demanda de jugadores.'
@@ -90,7 +98,6 @@ export function explainMove(move, events, releaseDate) {
   if (!reasons.length) reasons.push(move.dir === 'up'
     ? 'Sin un evento claro en los datos: suele deberse a demanda de coleccionistas, popularidad del Pokémon o menos copias disponibles.'
     : 'Sin un evento claro en los datos: suele deberse a más copias a la venta o menor interés.');
-  if (move.gap) reasons.push('No hay datos gratuitos de ese período, así que el cambio se ve como un salto.');
   return { head, text: reasons.join(' ') };
 }
 
@@ -101,7 +108,7 @@ export function claudeUrl(prompt) {
 function investigatePrompt(card, move) {
   const what = `la carta Pokémon "${card.name}" (${card.set?.name || ''} ${card.localId}${card.set?.cardCount?.official ? '/' + card.set.cardCount.official : ''}, rareza ${card.rarity || '?'})`;
   if (!move) return `Investiga el historial de precio de ${what} desde su lanzamiento hasta hoy. Explica en español, breve y con fechas, qué eventos hicieron subir o bajar su valor (reimpresiones, rotación, torneos, noticias, tendencias de coleccionistas, influencers).`;
-  return `Investiga por qué el precio de ${what} ${move.dir === 'up' ? 'subió' : 'bajó'} ${Math.abs(Math.round(move.pct))}% entre ${monthLabel(move.from)} y ${move.to === iso(Date.now()) ? 'hoy' : monthLabel(move.to)} (de ${fmt.usd(move.fromUsd)} a ${fmt.usd(move.toUsd)}). Considera reimpresiones, rotación de formato, torneos, noticias y tendencias de coleccionistas. Responde en español, breve.`;
+  return `Investiga por qué el precio de ${what} ${move.dir === 'up' ? 'subió' : 'bajó'} ${Math.abs(Math.round(move.pct))}% entre ${monthLabel(move.from)} y ${Date.now() - ts(move.to) < 32 * DAY ? 'hoy' : monthLabel(move.to)} (de ${fmt.usd(move.fromUsd)} a ${fmt.usd(move.toUsd)}). Considera reimpresiones, rotación de formato, torneos, noticias y tendencias de coleccionistas. Responde en español, breve.`;
 }
 
 async function setInfo(id) {
