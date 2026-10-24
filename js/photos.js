@@ -50,7 +50,7 @@ let input;
 function pick(id) {
   if (!input) {
     input = document.createElement('input');
-    input.type = 'file'; input.accept = 'image/*'; input.setAttribute('capture', 'environment'); input.hidden = true;
+    input.type = 'file'; input.accept = 'image/*'; input.hidden = true; // sin "capture": el celular ofrece cámara o álbum
     document.body.appendChild(input);
   }
   input.value = '';
