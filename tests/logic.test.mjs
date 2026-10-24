@@ -114,3 +114,19 @@ test('señales: reacción histórica y veredicto con colores', () => {
   assert.equal(iconic.verdict, 'up');
   assert.equal(iconic.label, 'Posible alza');
 });
+
+import { sortCards, nextAlbumName } from '../js/albums.js';
+
+test('álbumes: nombres automáticos y orden', () => {
+  assert.equal(nextAlbumName([]), 'Álbum A');
+  assert.equal(nextAlbumName([{ name: 'Álbum A' }, { name: 'Álbum B' }]), 'Álbum C');
+  const cards = [
+    { name: 'Pikachu', usd: 5, dex: 25 }, { name: 'Charizard', usd: 300, dex: 6 }, { name: 'Bulbasaur', usd: null, dex: 1 },
+  ];
+  assert.deepEqual(sortCards(cards, 'name-asc').map(c => c.name), ['Bulbasaur', 'Charizard', 'Pikachu']);
+  assert.deepEqual(sortCards(cards, 'name-desc').map(c => c.name), ['Pikachu', 'Charizard', 'Bulbasaur']);
+  assert.deepEqual(sortCards(cards, 'price-asc').map(c => c.name), ['Pikachu', 'Charizard', 'Bulbasaur']);
+  assert.deepEqual(sortCards(cards, 'price-desc').map(c => c.name), ['Charizard', 'Pikachu', 'Bulbasaur']);
+  assert.deepEqual(sortCards(cards, 'dex-asc').map(c => c.dex), [1, 6, 25]);
+  assert.deepEqual(sortCards(cards, 'dex-desc').map(c => c.dex), [25, 6, 1]);
+});

@@ -5,6 +5,7 @@ import { identify, searchText } from './identify.js';
 import { renderTimeline } from './timeline.js';
 import { renderSignals } from './signals.js';
 import { cardPic, initPhotos } from './photos.js';
+import { openAlbumPicker, viewAlbums, viewAlbum, albumsOf } from './albums.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -38,6 +39,8 @@ function route() {
   if (h.startsWith('/carta/')) return viewCard(decodeURIComponent(h.slice(7)));
   if (h.startsWith('/buscar/')) return viewSearch(decodeURIComponent(h.slice(8)));
   if (h === '/seguimiento') return viewWatch();
+  if (h === '/albumes') return viewAlbums(app);
+  if (h.startsWith('/album/')) return viewAlbum(app, decodeURIComponent(h.slice(7)));
   if (h === '/ajustes') return viewConfig();
   return viewHome();
 }
@@ -144,6 +147,7 @@ async function viewCard(id) {
           ${es && es.name !== card.name ? `<p class="muted">${esc(card.name)} (inglés)</p>` : ''}
           <p>${esc(card.set?.name || '')} · Nº ${esc(card.localId)}${card.set?.cardCount?.official ? '/' + card.set.cardCount.official : ''}</p>
           <p><span class="chip">${esc(es?.rarity || card.rarity || 'Rareza ?')}</span> ${es ? '<span class="chip ok">Existe en español</span>' : '<span class="chip">Sin datos en español</span>'}</p>
+          <p class="album-row"><button class="btn small ghost" id="album-btn">📁 Agregar a álbum</button><span id="album-tags" class="muted small"></span></p>
           <div class="big-price">
             <small>Valor de mercado (referencia)</small>
             <strong>${fmt.clp(ref != null ? ref * fx.CLP : null)}</strong>
@@ -179,6 +183,9 @@ async function viewCard(id) {
     </article>`;
 
   $('#watch').onclick = () => toggleWatch({ id, name: es?.name || card.name, image: card.image }, $('#watch'));
+  const showAlbums = () => { const n = albumsOf(id); $('#album-tags').textContent = n.length ? 'En: ' + n.join(', ') : ''; };
+  showAlbums();
+  $('#album-btn').onclick = () => openAlbumPicker({ ...card, nameEs: es?.name, pricing: en?.pricing || card.pricing }, fx, showAlbums);
   renderSpanish(id, card, es, ref, fx);
   loadHistory(card, fx);
   loadVersions(card, fx);

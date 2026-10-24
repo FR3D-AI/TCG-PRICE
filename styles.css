@@ -199,3 +199,32 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .tile .pic { border-radius: 7px; }
 .version .pic { width: 44px; border-radius: 4px; }
 .card-head .pic { width: 100%; }
+
+/* Álbumes */
+.album-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.album-row .btn { margin: 4px 0; }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-box { background: var(--panel); width: 100%; max-width: 520px; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 80vh; overflow: auto; }
+.sheet-box .btn { width: 100%; margin: 6px 0 0; }
+.sheet-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.sheet-row { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; background: var(--panel2); font-weight: 600; cursor: pointer; }
+.sheet-row input { width: 20px; height: 20px; accent-color: var(--accent); }
+.sheet-row span { flex: 1; }
+.sheet-row small { color: var(--muted); }
+.albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+.album { display: flex; flex-direction: column; gap: 4px; text-decoration: none; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+.album-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; min-height: 60px; align-items: center; }
+.album-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: .8rem; }
+.album small { color: var(--muted); font-size: .78rem; }
+.album-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sort { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; margin: 6px 0 14px; }
+.sort select { flex: 1; font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+.album-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.acard { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
+.acard a { text-decoration: none; }
+.acard-info { display: flex; flex-direction: column; margin-top: 5px; min-width: 0; }
+.acard-info b { font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acard-info small { color: var(--muted); font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acard-price { font-weight: 800; font-size: .85rem; margin-top: 2px; }
+.acard-del { position: absolute; top: 2px; right: 2px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 1rem; cursor: pointer; }
+.btn.danger { color: var(--down); }
