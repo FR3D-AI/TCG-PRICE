@@ -1,5 +1,5 @@
 // Identifica la carta a partir de lo que leyó el OCR (número + nombre) o de una búsqueda escrita.
-import { tcgdex } from './api.js';
+import { tcgdex, pool } from './api.js';
 import { localIdVariants, setIdFromCardId, similarity, parseOcr } from './logic.js';
 
 /**
@@ -18,15 +18,27 @@ export async function identify(read) {
 
   if (number) {
     const locals = localIdVariants(number);
-    const [sets, ...lists] = await Promise.all([
-      tcgdex.sets('en').catch(() => []),
-      ...locals.map(l => tcgdex.search({ localId: `eq:${l}` }, 'en')),
-      ...locals.map(l => tcgdex.search({ localId: `eq:${l}` }, 'es')),
-    ]);
-    lists.forEach((list, i) => list.forEach(b => add(b, i < locals.length ? 'en' : 'es')));
+    const sets = await tcgdex.sets('en').catch(() => []);
     const matchingSets = new Set((sets || [])
       .filter(s => s.cardCount && (s.cardCount.official === number.total || s.cardCount.total === number.total))
       .map(s => s.id));
+    // 1) Pide directo cada carta posible: set con ese total + número (pocas consultas, exactas).
+    const ids = [...matchingSets].flatMap(s => locals.map(l => `${s}-${l}`));
+    const [en, es] = await Promise.all([
+      pool(ids, 6, id => tcgdex.card(id, 'en')),
+      pool(ids, 6, id => tcgdex.card(id, 'es').catch(() => null)),
+    ]);
+    en.forEach(c => c && add(c, 'en'));
+    es.forEach(c => c && add(c, 'es'));
+    // 2) Si no hubo suerte, busca por número en todos los sets (filtro exacto aquí).
+    if (!byId.size) {
+      const [le, ls] = await Promise.all([
+        tcgdex.search({ localId: String(number.local) }, 'en'),
+        tcgdex.search({ localId: String(number.local) }, 'es'),
+      ]);
+      le.filter(b => locals.includes(b.localId)).forEach(b => add(b, 'en'));
+      ls.filter(b => locals.includes(b.localId)).forEach(b => add(b, 'es'));
+    }
     for (const c of byId.values()) {
       const nameScore = nameGuess ? Math.max(similarity(nameGuess, c.name || ''), similarity(nameGuess, c.nameEs || '')) : 0;
       c.setMatch = matchingSets.has(c.setId);
