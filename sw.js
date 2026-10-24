@@ -1,5 +1,5 @@
 // Service worker: la app abre al instante y funciona sin señal con lo último que viste.
-const SHELL = 'tasador-shell-v5';
+const SHELL = 'tasador-shell-v6';
 const DATA = 'tasador-data-v1';
 const FILES = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/card-back.svg',
   'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'data/history/index.json'];

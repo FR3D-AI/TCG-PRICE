@@ -228,3 +228,16 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .acard-price { font-weight: 800; font-size: .85rem; margin-top: 2px; }
 .acard-del { position: absolute; top: 2px; right: 2px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 1rem; cursor: pointer; }
 .btn.danger { color: var(--down); }
+
+/* Visor de foto en pantalla completa */
+.pic-btn.full { left: 6px; right: auto; font-size: 1.05rem; }
+.pic.big img[data-photo-full] { cursor: zoom-in; }
+.no-scroll, .no-scroll body { overflow: hidden; }
+.viewer { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
+.viewer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: max(10px, env(safe-area-inset-top)) 12px 8px; color: #ddd; font-size: .8rem; }
+.viewer-close { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.15); color: #fff; font-size: 1.5rem; cursor: pointer; flex: none; }
+.viewer-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; touch-action: pinch-zoom pan-x pan-y; -webkit-overflow-scrolling: touch; }
+.viewer-stage img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: high-quality; }
+.viewer-stage.zoomed { display: block; }
+.viewer-stage.zoomed img { max-width: none; max-height: none; width: 250%; cursor: zoom-out; }
+.viewer-hint { color: #888; font-size: .72rem; text-align: center; margin: 6px 0 calc(10px + env(safe-area-inset-bottom)); }
