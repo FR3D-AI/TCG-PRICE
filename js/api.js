@@ -50,12 +50,23 @@ export async function getJSON(url, ttl = 6 * HOUR) {
   try { return await p; } finally { inflight.delete(url); }
 }
 
+// Cartas de TCG Pocket (juego digital, sin precio de mercado): sets A1, A2b, P-A…
+const isPocket = id => /^(A\d+[a-z]?|P-A)-/.test(id || '');
+
+// Cardmarket usa 0 cuando no hay dato: lo tratamos como "sin precio".
+function cleanCard(c) {
+  const cm = c?.pricing?.cardmarket;
+  if (cm) for (const k of Object.keys(cm)) if (cm[k] === 0) cm[k] = null;
+  return c;
+}
+
 export const tcgdex = {
-  sets: (lang = 'en') => getJSON(`${tcgdexBase()}/${lang}/sets`, 7 * 24 * HOUR),
-  card: (id, lang = 'en') => getJSON(`${tcgdexBase()}/${lang}/cards/${encodeURIComponent(id)}`, 6 * HOUR),
+  sets: (lang = 'en') => getJSON(`${tcgdexBase()}/${lang}/sets`, 7 * 24 * HOUR)
+    .then(r => (r || []).filter(s => !isPocket(s.id + '-'))),
+  card: (id, lang = 'en') => getJSON(`${tcgdexBase()}/${lang}/cards/${encodeURIComponent(id)}`, 6 * HOUR).then(cleanCard),
   search: (params, lang = 'en') => {
     const qs = new URLSearchParams(params).toString();
-    return getJSON(`${tcgdexBase()}/${lang}/cards?${qs}`, 24 * HOUR).then(r => r || []);
+    return getJSON(`${tcgdexBase()}/${lang}/cards?${qs}`, 24 * HOUR).then(r => (r || []).filter(b => !isPocket(b.id)));
   },
 };
 
