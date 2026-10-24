@@ -1,4 +1,17 @@
 {
-  "updated": null,
-  "cards": []
+  "updated": "2026-10-24",
+  "cards": [
+    {
+      "id": "sv03.5-199",
+      "name": "Charizard ex",
+      "updated": "2026-10-24",
+      "points": 1
+    },
+    {
+      "id": "base1-4",
+      "name": "Charizard",
+      "updated": "2026-10-24",
+      "points": 1
+    }
+  ]
 }
