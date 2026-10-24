@@ -241,3 +241,74 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .viewer-stage.zoomed { display: block; }
 .viewer-stage.zoomed img { max-width: none; max-height: none; width: 250%; cursor: zoom-out; }
 .viewer-hint { color: #888; font-size: .72rem; text-align: center; margin: 6px 0 calc(10px + env(safe-area-inset-bottom)); }
+
+/* Niveles de rareza: borde y animación sutil */
+@property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes tier-spin { to { --ang: 360deg; } }
+@keyframes tier-breathe { 0%, 100% { box-shadow: 0 0 0 0 var(--tg, transparent); } 50% { box-shadow: 0 0 16px 3px var(--tg, transparent); } }
+@keyframes tier-sheen { 0%, 65% { transform: translateX(-160%) skewX(-18deg); } 100% { transform: translateX(260%) skewX(-18deg); } }
+@keyframes tier-holo { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes tier-twinkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+.tier-wrap { position: relative; display: block; border-radius: 12px; padding: 3px; background: var(--line); }
+.tier-wrap > .pic, .tier-wrap .pic.big { border-radius: 9px; box-shadow: none; }
+.tier-wrap .pic::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+.tier-wrap.small { display: block; padding: 2px; border-radius: 7px; }
+.tier-wrap.small .pic { border-radius: 5px; }
+.version .tier-wrap.small { width: 48px; }
+
+.tier-muycomun { background: var(--line); }
+.tier-comun { background: #9ca3af; --tg: rgba(156,163,175,.4); animation: tier-breathe 6s ease-in-out infinite; }
+.tier-pococomun { background: #22c55e; --tg: rgba(34,197,94,.45); animation: tier-breathe 4.5s ease-in-out infinite; }
+.tier-rara { background: #3b82f6; --tg: rgba(59,130,246,.55); animation: tier-breathe 3.8s ease-in-out infinite; }
+.tier-muyrara { background: linear-gradient(135deg, #e2e8f0, #64748b, #f8fafc, #94a3b8); --tg: rgba(226,232,240,.55); animation: tier-breathe 3.5s ease-in-out infinite; }
+.tier-epica { background: linear-gradient(135deg, #c084fc, #6d28d9, #e9d5ff); --tg: rgba(168,85,247,.6); animation: tier-breathe 3s ease-in-out infinite; }
+.tier-ultra { background: conic-gradient(from var(--ang), #fde047, #b45309, #fef3c7, #f59e0b, #fde047); --tg: rgba(250,204,21,.55); animation: tier-spin 5s linear infinite, tier-breathe 3s ease-in-out infinite; }
+.tier-vmax { background: conic-gradient(from var(--ang), #ef4444, #f97316, #7f1d1d, #fb923c, #ef4444); --tg: rgba(239,68,68,.65); animation: tier-spin 3s linear infinite, tier-breathe 2.2s ease-in-out infinite; }
+.tier-coleccion { background: conic-gradient(from var(--ang), #f43f5e, #f59e0b, #84cc16, #06b6d4, #8b5cf6, #f43f5e); --tg: rgba(236,72,153,.55); animation: tier-spin 4s linear infinite, tier-breathe 3s ease-in-out infinite; }
+
+/* Destello que cruza la carta (solo en la ficha) */
+.tier-wrap:not(.small).tier-muyrara .pic::after,
+.tier-wrap:not(.small).tier-epica .pic::after,
+.tier-wrap:not(.small).tier-ultra .pic::after,
+.tier-wrap:not(.small).tier-vmax .pic::after { width: 45%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent); animation: tier-sheen 6s ease-in-out infinite; }
+.tier-wrap:not(.small).tier-epica .pic::after { background: linear-gradient(90deg, transparent, rgba(233,213,255,.5), transparent); animation-duration: 5s; }
+.tier-wrap:not(.small).tier-vmax .pic::after { background: linear-gradient(90deg, transparent, rgba(254,215,170,.5), transparent); animation-duration: 4s; }
+/* Holográfico arcoíris + destellos para las más buscadas */
+.tier-wrap:not(.small).tier-coleccion .pic::after { background: linear-gradient(115deg, transparent 15%, rgba(255,0,128,.22), rgba(0,255,255,.22), rgba(255,255,0,.22), rgba(128,0,255,.22), transparent 85%); background-size: 200% 100%; mix-blend-mode: color-dodge; animation: tier-holo 5s linear infinite; }
+.tier-wrap:not(.small).tier-coleccion::before, .tier-wrap:not(.small).tier-coleccion::after { content: '✦'; position: absolute; z-index: 2; color: #fff; text-shadow: 0 0 6px #fde047; font-size: 18px; pointer-events: none; animation: tier-twinkle 2.6s ease-in-out infinite; }
+.tier-wrap:not(.small).tier-coleccion::before { top: -8px; right: 14px; }
+.tier-wrap:not(.small).tier-coleccion::after { bottom: 18px; left: -8px; animation-delay: 1.3s; font-size: 14px; }
+
+/* En listas: solo el borde, sin movimiento (más liviano) */
+.tier-wrap.small { animation: none; }
+
+/* Insignia y especificaciones */
+.tier-row { margin: 6px 0 2px; }
+.tier-badge { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 99px; padding: 5px 12px; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; color: #fff; }
+.tb-muycomun { background: #6b7280; } .tb-comun { background: #9ca3af; color: #111; } .tb-pococomun { background: #16a34a; }
+.tb-rara { background: #2563eb; } .tb-muyrara { background: linear-gradient(135deg, #94a3b8, #475569); }
+.tb-epica { background: linear-gradient(135deg, #a855f7, #6d28d9); } .tb-ultra { background: linear-gradient(135deg, #facc15, #b45309); color: #1a1a1a; }
+.tb-vmax { background: linear-gradient(135deg, #ef4444, #f97316); }
+.tb-coleccion { background: linear-gradient(90deg, #f43f5e, #f59e0b, #84cc16, #06b6d4, #8b5cf6); background-size: 200% 100%; animation: tier-holo 4s linear infinite; }
+.tier-info { background: var(--panel2); border-radius: 12px; padding: 10px 12px; margin: 8px 0; font-size: .85rem; }
+.tier-info p { margin: 0 0 6px; }
+.tier-info summary { cursor: pointer; font-weight: 700; font-size: .82rem; }
+.tier-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.tier-legend li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; opacity: .75; }
+.tier-legend li.on { opacity: 1; }
+.tier-legend .tier-wrap.small { width: 26px; animation: inherit; }
+.tier-legend .swatch { display: block; aspect-ratio: 63/88; border-radius: 4px; background: var(--panel); }
+.tier-legend b { display: block; font-size: .82rem; }
+.tier-legend small { color: var(--muted); font-size: .72rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tier-wrap, .tier-wrap .pic::after, .tier-wrap::before, .tier-wrap::after, .tb-coleccion { animation: none !important; }
+}
+
+/* Botón "Agregar a tu álbum" en listas */
+.tile-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tile-wrap .tile { flex: 1; }
+.tile-alb { border: 0; border-radius: 9px; padding: 6px 4px; font: inherit; font-size: .68rem; font-weight: 700; background: var(--panel2); color: var(--text); cursor: pointer; line-height: 1.2; }
+.tile-alb.done { background: color-mix(in srgb, var(--up) 20%, var(--panel2)); color: var(--up); }
+.tile-alb:disabled { opacity: .6; }

@@ -6,6 +6,7 @@ import { renderTimeline } from './timeline.js';
 import { renderSignals } from './signals.js';
 import { cardPic, initPhotos } from './photos.js';
 import { openAlbumPicker, viewAlbums, viewAlbum, albumsOf } from './albums.js';
+import { tierOf, tierBadge, initTierBadges } from './tiers.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -30,6 +31,7 @@ function remember(card) {
 
 // ---------- router ----------
 initPhotos();
+initTierBadges();
 window.addEventListener('hashchange', route);
 route();
 
@@ -81,10 +83,30 @@ function viewHome() {
 }
 
 function cardTile(c) {
-  return `<a class="tile" href="#/carta/${encodeURIComponent(c.id)}">
+  return `<div class="tile-wrap"><a class="tile" href="#/carta/${encodeURIComponent(c.id)}">
     ${cardPic(c.id, c.image)}
-    <span>${esc(c.nameEs || c.name || c.id)}</span><small>${esc(c.id)}</small></a>`;
+    <span>${esc(c.nameEs || c.name || c.id)}</span><small>${esc(c.id)}</small></a>
+    <button type="button" class="tile-alb" data-alb-add="${esc(c.id)}">📁 Agregar a tu álbum</button></div>`;
 }
+
+// Botón "Agregar a tu álbum" en cualquier lista de cartas (escaneo, búsqueda, recientes).
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-alb-add]');
+  if (!b) return;
+  e.preventDefault();
+  const old = b.textContent; b.disabled = true; b.textContent = 'Cargando…';
+  try {
+    const id = b.dataset.albAdd;
+    const [en, es, fx] = await Promise.all([tcgdex.card(id, 'en'), tcgdex.card(id, 'es').catch(() => null), fxRates()]);
+    const card = en || es;
+    if (!card) throw new Error('No encontré esa carta.');
+    openAlbumPicker({ ...card, nameEs: es?.name, pricing: en?.pricing || card.pricing }, fx, () => {
+      const n = albumsOf(id); b.textContent = n.length ? `✓ En ${n.join(', ')}` : old; b.classList.toggle('done', n.length > 0);
+    });
+    b.textContent = old;
+  } catch (err) { toast(err.message || 'No se pudo cargar la carta'); b.textContent = old; }
+  finally { b.disabled = false; }
+});
 
 async function runScan(file) {
   app.innerHTML = `<div class="center"><img id="prev" class="scan-prev" alt="">
@@ -137,17 +159,19 @@ async function viewCard(id) {
   const mom = momentum(sum.cardmarket);
   const eurClp = fx.CLP / fx.EUR;
   const watched = store.get('watch', []).some(w => w.id === id);
+  const tier = tierOf({ rarity: card.rarity, name: card.name, usd: ref, category: card.category });
 
   app.innerHTML = `
     <article class="card-view">
       <header class="card-head">
-        ${cardPic(id, card.image, 'high')}
+        <div class="tier-wrap tier-${tier}">${cardPic(id, card.image, 'high')}</div>
         <div>
           <h1>${esc(es?.name || card.name)}</h1>
           ${es && es.name !== card.name ? `<p class="muted">${esc(card.name)} (inglés)</p>` : ''}
           <p>${esc(card.set?.name || '')} · Nº ${esc(card.localId)}${card.set?.cardCount?.official ? '/' + card.set.cardCount.official : ''}</p>
           <p><span class="chip">${esc(es?.rarity || card.rarity || 'Rareza ?')}</span> ${es ? '<span class="chip ok">Existe en español</span>' : '<span class="chip">Sin datos en español</span>'}</p>
-          <p class="album-row"><button class="btn small ghost" id="album-btn">📁 Agregar a álbum</button><span id="album-tags" class="muted small"></span></p>
+          <div class="tier-row">${tierBadge(tier)}</div>
+          <p class="album-row"><button class="btn small ghost" id="album-btn">📁 Agregar a tu álbum</button><span id="album-tags" class="muted small"></span></p>
           <div class="big-price">
             <small>Valor de mercado (referencia)</small>
             <strong>${fmt.clp(ref != null ? ref * fx.CLP : null)}</strong>
@@ -312,7 +336,7 @@ async function loadVersions(card, fx) {
       <h3>Cada impresión</h3>
       <div class="versions">${rows.map(r => `
         <a class="version ${r.id === card.id ? 'current' : ''}" href="#/carta/${encodeURIComponent(r.id)}">
-          ${cardPic(r.id, r.image)}
+          <span class="tier-wrap small tier-${tierOf({ rarity: r.rarity, name: card.name, usd: r.usd })}">${cardPic(r.id, r.image)}</span>
           <div><b>${esc(r.set)}</b><small>Nº ${esc(r.localId)} · ${esc(r.rarity)}</small></div>
           <span>${fmt.clp(r.usd != null ? r.usd * fx.CLP : null)}<small>${fmt.usd(r.usd)}</small></span>
         </a>`).join('')}</div>

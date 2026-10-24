@@ -3,6 +3,7 @@
 import { tcgdex, fxRates, pool } from './api.js';
 import { summarizePricing, referenceUsd, fmt } from './logic.js';
 import { cardPic } from './photos.js';
+import { tierOf } from './tiers.js';
 
 const KEY = 'tasador:albums';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -50,7 +51,7 @@ export function openAlbumPicker(card, fx, onChange = () => {}) {
   const draw = () => {
     const albums = loadAlbums();
     sheet.innerHTML = `<div class="sheet-box" role="dialog" aria-label="Agregar a álbum">
-      <h2>Agregar a álbum</h2>
+      <h2>Agregar a tu álbum</h2>
       <p class="muted small">${esc(entry.name)} · ${esc(entry.set)} Nº ${esc(entry.localId)}</p>
       <div class="sheet-list">${albums.map(a => `
         <label class="sheet-row"><input type="checkbox" data-alb="${a.id}" ${a.cards.some(c => c.id === entry.id) ? 'checked' : ''}>
@@ -91,7 +92,7 @@ export async function viewAlbums(app) {
   const albums = loadAlbums();
   const fx = await fxRates();
   app.innerHTML = `<h1>Mis álbumes</h1>
-    <p class="muted">Clasifica tus cartas. Para agregar una, ábrela y toca <b>📁 Agregar a álbum</b>.</p>
+    <p class="muted">Clasifica tus cartas. Para agregar una, toca <b>📁 Agregar a tu álbum</b> en cualquier carta escaneada o buscada.</p>
     <div class="albums">${albums.map(a => {
       const total = a.cards.reduce((s, c) => s + (c.usd || 0), 0);
       const covers = a.cards.slice(0, 3).map(c => cardPic(c.id, c.image)).join('');
@@ -131,14 +132,14 @@ export async function viewAlbum(app, id) {
       </label>
       ${cards.length ? `<div class="album-cards">${cards.map(c => `
         <div class="acard">
-          <a href="#/carta/${encodeURIComponent(c.id)}">${cardPic(c.id, c.image)}</a>
+          <a href="#/carta/${encodeURIComponent(c.id)}"><span class="tier-wrap small tier-${tierOf({ rarity: c.rarity, name: c.name, usd: c.usd })}">${cardPic(c.id, c.image)}</span></a>
           <div class="acard-info">
             <b>${esc(c.name)}</b>
             <small>${c.dex ? `#${String(c.dex).padStart(4, '0')} · ` : ''}${esc(c.set)} ${esc(c.localId)}</small>
             <span class="acard-price">${fmt.clp(c.usd != null ? c.usd * fx.CLP : null)}</span>
           </div>
           <button class="acard-del" data-del="${esc(c.id)}" aria-label="Quitar del álbum">×</button>
-        </div>`).join('')}</div>` : '<p class="muted">Este álbum está vacío. Abre una carta y toca <b>📁 Agregar a álbum</b>.</p>'}
+        </div>`).join('')}</div>` : '<p class="muted">Este álbum está vacío. Toca <b>📁 Agregar a tu álbum</b> en cualquier carta.</p>'}
       <button class="btn ghost small danger" id="del-album">Borrar álbum</button>
       <p class="note">Los precios se actualizan solos al abrir el álbum.</p>`;
     app.querySelector('#sort').onchange = e => { sortKey = e.target.value; localStorage.setItem('tasador:albumSort', sortKey); draw(); };

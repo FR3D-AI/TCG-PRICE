@@ -130,3 +130,21 @@ test('álbumes: nombres automáticos y orden', () => {
   assert.deepEqual(sortCards(cards, 'dex-asc').map(c => c.dex), [1, 6, 25]);
   assert.deepEqual(sortCards(cards, 'dex-desc').map(c => c.dex), [25, 6, 1]);
 });
+
+import { tierOf } from '../js/tiers.js';
+
+test('niveles de rareza', () => {
+  assert.equal(tierOf({ rarity: 'Common', usd: 0.05 }), 'muycomun');
+  assert.equal(tierOf({ rarity: 'Common', usd: 0.3 }), 'comun');
+  assert.equal(tierOf({ rarity: 'Uncommon' }), 'pococomun');
+  assert.equal(tierOf({ rarity: 'Rare' }), 'rara');
+  assert.equal(tierOf({ rarity: 'Rare Holo', usd: 5 }), 'muyrara');
+  assert.equal(tierOf({ rarity: 'Illustration rare' }), 'epica');
+  assert.equal(tierOf({ rarity: 'Double rare', name: 'Charizard ex' }), 'ultra');
+  assert.equal(tierOf({ rarity: 'Rare Holo VMAX', name: 'Charizard VMAX' }), 'vmax');
+  assert.equal(tierOf({ rarity: 'Special illustration rare' }), 'coleccion');
+  assert.equal(tierOf({ rarity: 'Rare Holo', usd: 447 }), 'coleccion');
+  assert.equal(tierOf({ rarity: 'Rara ilustración especial' }), 'coleccion');
+  assert.equal(tierOf({ rarity: 'Poco común' }), 'pococomun');
+  assert.equal(tierOf({ rarity: '', name: 'Fire Energy', category: 'Energy' }), 'muycomun');
+});
