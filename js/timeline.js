@@ -54,12 +54,15 @@ export function detectMoves(points, nowUsd, today = iso(Date.now())) {
       skipUntil = j + 1;
     }
   }
-  const last = m[m.length - 1];
-  if (last && nowUsd != null && ts(today) - ts(last.date) > 120 * DAY) {
-    const pct = (nowUsd / last.usd - 1) * 100;
-    if (Math.abs(pct) >= 20) moves.push({ from: last.date, to: today, fromUsd: last.usd, toUsd: nowUsd, pct, dir: pct > 0 ? 'up' : 'down', gap: true });
+  // Saltos a través de períodos sin datos (incluye el último dato → hoy).
+  const seq = [...m];
+  if (nowUsd != null && (!seq.length || seq[seq.length - 1].date < today)) seq.push({ date: today, usd: nowUsd });
+  for (let i = 1; i < seq.length; i++) {
+    if (ts(seq[i].date) - ts(seq[i - 1].date) <= 120 * DAY) continue;
+    const pct = (seq[i].usd / seq[i - 1].usd - 1) * 100;
+    if (Math.abs(pct) >= 20) moves.push({ from: seq[i - 1].date, to: seq[i].date, fromUsd: seq[i - 1].usd, toUsd: seq[i].usd, pct, dir: pct > 0 ? 'up' : 'down', gap: true });
   }
-  return moves;
+  return moves.sort((x, y) => x.to.localeCompare(y.to));
 }
 
 /** Busca la causa más probable entre los eventos cercanos a una subida o bajada. */
@@ -69,7 +72,7 @@ export function explainMove(move, events, releaseDate) {
   const rot = near.find(e => e.type === 'rotation');
   const reps = near.filter(e => e.type === 'reprint');
   const months = Math.round((ts(move.to) - ts(move.from)) / (30 * DAY));
-  const span = move.gap ? `entre ${monthLabel(move.from)} y hoy` : `en ${Math.max(months, 1)} ${months === 1 ? 'mes' : 'meses'}`;
+  const span = move.gap ? `entre ${monthLabel(move.from)} y ${move.to === iso(Date.now()) ? 'hoy' : monthLabel(move.to)}` : `en ${Math.max(months, 1)} ${months === 1 ? 'mes' : 'meses'}`;
   const head = `${move.dir === 'up' ? 'Subió' : 'Bajó'} ${fmt.pct(move.pct)} ${span}`;
   const reasons = [];
   if (releaseDate && move.dir === 'down' && ts(move.from) - ts(releaseDate) < 200 * DAY) {
@@ -98,7 +101,7 @@ export function claudeUrl(prompt) {
 function investigatePrompt(card, move) {
   const what = `la carta Pokémon "${card.name}" (${card.set?.name || ''} ${card.localId}${card.set?.cardCount?.official ? '/' + card.set.cardCount.official : ''}, rareza ${card.rarity || '?'})`;
   if (!move) return `Investiga el historial de precio de ${what} desde su lanzamiento hasta hoy. Explica en español, breve y con fechas, qué eventos hicieron subir o bajar su valor (reimpresiones, rotación, torneos, noticias, tendencias de coleccionistas, influencers).`;
-  return `Investiga por qué el precio de ${what} ${move.dir === 'up' ? 'subió' : 'bajó'} ${Math.abs(Math.round(move.pct))}% entre ${monthLabel(move.from)} y ${move.gap ? 'hoy' : monthLabel(move.to)} (de ${fmt.usd(move.fromUsd)} a ${fmt.usd(move.toUsd)}). Considera reimpresiones, rotación de formato, torneos, noticias y tendencias de coleccionistas. Responde en español, breve.`;
+  return `Investiga por qué el precio de ${what} ${move.dir === 'up' ? 'subió' : 'bajó'} ${Math.abs(Math.round(move.pct))}% entre ${monthLabel(move.from)} y ${move.to === iso(Date.now()) ? 'hoy' : monthLabel(move.to)} (de ${fmt.usd(move.fromUsd)} a ${fmt.usd(move.toUsd)}). Considera reimpresiones, rotación de formato, torneos, noticias y tendencias de coleccionistas. Responde en español, breve.`;
 }
 
 async function setInfo(id) {
