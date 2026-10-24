@@ -60,8 +60,8 @@ function viewHome() {
     <section class="hero">
       <h1>¿Cuánto vale tu carta?</h1>
       <p class="muted">Sácale una foto de frente, con buena luz y sin reflejos. Se leen el nombre y el número de abajo (ej. 199/165).</p>
-      <label class="btn big" for="photo">📷 Escanear carta</label>
-      <input id="photo" type="file" accept="image/*" capture="environment" hidden>
+      <label class="btn big" for="photo">📷 Escanear carta (cámara o álbum)</label>
+      <input id="photo" type="file" accept="image/*" hidden>
       <form id="search" class="search">
         <input name="q" placeholder="O escribe: Charizard ex, 199/165…" autocomplete="off" enterkeyhint="search">
         <button class="btn" aria-label="Buscar">Buscar</button>
@@ -107,7 +107,7 @@ function renderCandidates(cands, read) {
     ${cands.length ? `<div class="grid">${cands.map(cardTile).join('')}</div>` :
       `<p>Prueba otra foto (más cerca y sin reflejos) o escribe el nombre o el número.</p>`}
     <form id="search" class="search"><input name="q" value="${esc(read?.nameGuess || '')}" placeholder="Nombre o número"><button class="btn">Buscar</button></form>
-    <label class="btn ghost" for="photo">📷 Otra foto</label><input id="photo" type="file" accept="image/*" capture="environment" hidden>`;
+    <label class="btn ghost" for="photo">📷 Otra foto</label><input id="photo" type="file" accept="image/*" hidden>`;
   $('#search').onsubmit = e => { e.preventDefault(); const q = new FormData(e.target).get('q').trim(); if (q) location.hash = '/buscar/' + encodeURIComponent(q); };
   $('#photo').onchange = e => e.target.files[0] && runScan(e.target.files[0]);
 }
