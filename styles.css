@@ -520,3 +520,8 @@ nav.top > div { display: flex; align-items: center; white-space: nowrap; }
 @media (max-width: 440px) { nav.top a { margin-left: 9px; font-size: .9rem; } nav.top .brand { font-size: .98rem; } nav.top .bell { margin-left: 6px; width: 30px; } }
 .mylog-t td:first-child { text-transform: none; }
 .mylog-t td:first-child::first-letter { text-transform: uppercase; }
+
+/* Nombre TCG Latam en una línea */
+nav.top .brand { white-space: nowrap; }
+@media (max-width: 380px) { nav.top { padding-left: 12px; padding-right: 12px; } nav.top a { margin-left: 7px; font-size: .84rem; } nav.top .brand { font-size: .92rem; gap: 6px; } nav.top .brand img { width: 22px; height: 22px; } nav.top .bell { margin-left: 4px; width: 28px; } }
+@media (max-width: 340px) { nav.top a { margin-left: 5px; font-size: .78rem; } }

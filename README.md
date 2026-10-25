@@ -1,4 +1,4 @@
-# Tasador TCG
+# TCG Latam
 
 App web para el celular: le sacas una foto a una carta Pokémon y te muestra sus precios en todas sus versiones, cómo ha cambiado su valor por año, si va subiendo o bajando, y un valor estimado para la versión en español en pesos chilenos.
 

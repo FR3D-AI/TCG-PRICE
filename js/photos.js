@@ -100,7 +100,7 @@ export async function openViewer(id, base, tier, opts = {}) {
   v.innerHTML = `<div class="viewer-bar"><span class="viewer-note">Cargando…</span><button type="button" class="viewer-close" aria-label="Cerrar">×</button></div>
     <div class="viewer-stage"><div class="viewer-tilt ${tier ? 'has-tier' : ''}">
       <i class="vt-edge" style="--z:-1px"></i><i class="vt-edge" style="--z:-2px"></i><i class="vt-edge" style="--z:-3px"></i><i class="vt-edge" style="--z:-4px"></i><i class="vt-edge" style="--z:-5px"></i>
-      <div class="viewer-back" aria-hidden="true"><div class="vb-inner"><b>Tasador</b><small>TCG</small></div></div>
+      <div class="viewer-back" aria-hidden="true"><div class="vb-inner"><b>TCG</b><small>LATAM</small></div></div>
       <div class="viewer-frame ${tier ? `tier-wrap tier-${tier}` : ''}"><span class="pic viewer-pic"><img alt="Carta en pantalla completa" draggable="false"></span></div>
       <i class="vt-glare"></i>
     </div></div>

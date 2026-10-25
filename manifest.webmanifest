@@ -1,6 +1,6 @@
 {
-  "name": "Tasador TCG",
-  "short_name": "Tasador",
+  "name": "TCG Latam",
+  "short_name": "TCG Latam",
   "description": "Escanea cartas Pokémon y mira su valor, historial y precio en español.",
   "lang": "es",
   "start_url": "./",
