@@ -1,8 +1,8 @@
 // Service worker: la app abre al instante y funciona sin señal con lo último que viste.
-const SHELL = 'tasador-shell-v9';
+const SHELL = 'tasador-shell-v10';
 const DATA = 'tasador-data-v1';
 const FILES = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/card-back.svg',
-  'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'js/tiers.js', 'data/history/index.json'];
+  'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'js/tiers.js', 'js/pokecover.js', 'data/history/index.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -18,7 +18,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   const sameOrigin = url.origin === location.origin;
-  const isImage = url.host === 'assets.tcgdex.net';
+  const isImage = url.host === 'assets.tcgdex.net' || (url.host === 'raw.githubusercontent.com' && url.pathname.includes('/PokeAPI/sprites/'));
   const isOcr = url.host === 'cdn.jsdelivr.net' || url.host.endsWith('tessdata.projectnaptha.com');
 
   // Imágenes de cartas y archivos del lector OCR: caché primero (no cambian).

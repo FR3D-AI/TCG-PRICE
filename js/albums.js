@@ -4,6 +4,7 @@ import { tcgdex, fxRates, pool } from './api.js';
 import { summarizePricing, referenceUsd, fmt } from './logic.js';
 import { cardPic, openViewer } from './photos.js';
 import { tierOf } from './tiers.js';
+import { openPokeCover, artUrl, ballUrl, energyBg, POKE_TYPES } from './pokecover.js';
 
 const KEY = 'tasador:albums';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -104,11 +105,15 @@ function coverHtml(a, fx, { mini = false } = {}) {
   const c = { ...defaultCover(), ...(a.cover || {}) };
   const total = a.cards.reduce((s, x) => s + (x.usd || 0), 0);
   const feat = c.cardId ? a.cards.find(x => x.id === c.cardId) : null;
-  return `<div class="cover ${mini ? 'mini' : ''} pat-${c.pattern}" style="--cover:${c.color}">
+  const t = POKE_TYPES[c.type];
+  const art = !feat && c.poke ? `<div class="cover-poke${c.shiny ? ' shiny' : ''}"><img src="${artUrl(c.poke, c.shiny)}" alt="" onerror="this.parentNode.remove()"></div>` : '';
+  const style = `--cover:${c.color}${t ? `;--glow:${t.glow};--energy:${energyBg(c.type)}` : ''}`;
+  return `<div class="cover ${mini ? 'mini' : ''} pat-${c.pattern}${t ? ' typed' : ''}" style='${style}'>
     <div class="cover-spine"><i></i><i></i><i></i></div>
     <div class="cover-face">
-      ${feat ? `<div class="cover-card">${cardPic(feat.id, feat.image)}</div>` : (c.emblem ? `<div class="cover-emblem">${c.emblem}</div>` : '')}
-      <div class="cover-title">${feat && c.emblem ? `${c.emblem} ` : ''}${esc(a.name)}</div>
+      ${c.ball ? `<img class="cover-ball" src="${ballUrl(c.ball)}" alt="">` : ''}
+      ${feat ? `<div class="cover-card">${cardPic(feat.id, feat.image)}</div>` : art || (c.emblem ? `<div class="cover-emblem">${c.emblem}</div>` : '')}
+      <div class="cover-title">${(feat || art) && c.emblem ? `${c.emblem} ` : ''}${esc(a.name)}</div>
       ${mini ? '' : `<div class="cover-meta">${a.cards.length} ${a.cards.length === 1 ? 'carta' : 'cartas'} · ${fmt.clp(total * fx.CLP)}</div>`}
     </div>
   </div>`;
@@ -144,7 +149,7 @@ export async function viewAlbum(app, id) {
     const a = album();
     if (!a) return;
     app.innerHTML = `<p class="album-nav"><a href="#/albumes">← Mis álbumes</a>
-        <span><button class="btn ghost small" id="custom">🎨 Personalizar</button></span></p>
+        <span class="album-btns"><button class="btn ghost small" id="pokecover">🔴 Tapa Pokémon</button><button class="btn ghost small" id="custom">🎨 Personalizar</button></span></p>
       <div class="album-tools">
         <select id="sort" aria-label="Ordenar">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === sortKey ? 'selected' : ''}>${v.label}</option>`).join('')}</select>
         <div class="seg">
@@ -157,6 +162,15 @@ export async function viewAlbum(app, id) {
     app.querySelector('#sort').onchange = e => { sortKey = e.target.value; localStorage.setItem('tasador:albumSort', sortKey); page = 0; render(); };
     app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { setMode(b.dataset.mode); page = 0; shell(); });
     app.querySelector('#custom').onclick = () => customize(id, () => { shell(); });
+    app.querySelector('#pokecover').onclick = () => {
+      const cur = album(); if (!cur) return;
+      openPokeCover(cur, { ...defaultCover(), ...(cur.cover || {}) }, c => coverHtml({ ...cur, cover: c }, { CLP: 0 }, { mini: true }), c => {
+        const list = loadAlbums(); const x = list.find(y => y.id === id);
+        if (x) { x.cover = c; saveAlbums(list); }
+        if (mode !== 'cover') setMode('cover');
+        shell();
+      });
+    };
     render();
   };
 
