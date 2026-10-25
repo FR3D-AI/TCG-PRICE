@@ -1,8 +1,8 @@
 // Service worker: la app abre al instante y funciona sin señal con lo último que viste.
-const SHELL = 'tasador-shell-v12';
+const SHELL = 'tasador-shell-v13';
 const DATA = 'tasador-data-v1';
 const FILES = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/card-back.svg',
-  'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'js/tiers.js', 'js/pokecover.js', 'data/history/index.json'];
+  'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'js/tiers.js', 'js/pokecover.js', 'js/notify.js', 'data/history/index.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -40,4 +40,14 @@ self.addEventListener('fetch', e => {
     }).catch(() => caches.match(req)));
   }
   // APIs de precios: la caché de la app (localStorage) ya se encarga.
+});
+
+// Toca una notificación del celular → abre la sección de avisos.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const url = new URL('./#/notificaciones', self.registration.scope).href;
+    for (const c of list) if ('focus' in c) { c.navigate?.(url); return c.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });

@@ -7,6 +7,7 @@ import { renderSignals } from './signals.js';
 import { cardPic, initPhotos } from './photos.js';
 import { openAlbumPicker, viewAlbums, viewAlbum, albumsOf } from './albums.js';
 import { tierOf, tierBadge, initTierBadges } from './tiers.js';
+import { initNotify, viewNotifications, myLogHtml, dailyUpdate } from './notify.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
   yearly, weekly, spanishEstimate, median, fmt,
@@ -32,6 +33,7 @@ function remember(card) {
 // ---------- router ----------
 initPhotos();
 initTierBadges();
+initNotify();
 window.addEventListener('hashchange', route);
 route();
 
@@ -41,6 +43,7 @@ function route() {
   if (h.startsWith('/carta/')) return viewCard(decodeURIComponent(h.slice(7)));
   if (h.startsWith('/buscar/')) return viewSearch(decodeURIComponent(h.slice(8)));
   if (h === '/seguimiento') return viewWatch();
+  if (h === '/notificaciones') return viewNotifications(app);
   if (h === '/albumes') return viewAlbums(app);
   if (h.startsWith('/album/')) return viewAlbum(app, decodeURIComponent(h.slice(7)));
   if (h === '/ajustes') return viewConfig();
@@ -200,14 +203,19 @@ async function viewCard(id) {
       <section class="card-box" id="jp" hidden></section>
 
       <section class="card-box">
-        <h2>Seguimiento diario</h2>
-        <p class="muted">Guarda su precio cada día en tu repositorio de GitHub para armar tu propio historial.</p>
+        <h2>Tu historial diario</h2>
+        <div id="mylog">${myLogHtml(id, fx)}</div>
+        <p class="muted">Además puedes guardar su precio cada día en tu repositorio de GitHub (respaldo en la nube).</p>
         <button class="btn ${watched ? 'ghost' : ''}" id="watch">${watched ? '✓ En seguimiento' : '+ Seguir esta carta'}</button>
       </section>
     </article>`;
 
   $('#watch').onclick = () => toggleWatch({ id, name: es?.name || card.name, image: card.image }, $('#watch'));
-  const showAlbums = () => { const n = albumsOf(id); $('#album-tags').textContent = n.length ? 'En: ' + n.join(', ') : ''; };
+  const showAlbums = () => {
+    const n = albumsOf(id); $('#album-tags').textContent = n.length ? 'En: ' + n.join(', ') : '';
+    // Recién agregada a un álbum: registra hoy su primer precio.
+    if (n.length) dailyUpdate().then(() => { const el = $('#mylog'); if (el && location.hash.includes(encodeURIComponent(id))) el.innerHTML = myLogHtml(id, fx); }).catch(() => {});
+  };
   showAlbums();
   $('#album-btn').onclick = () => openAlbumPicker({ ...card, nameEs: es?.name, pricing: en?.pricing || card.pricing }, fx, showAlbums);
   renderSpanish(id, card, es, ref, fx);

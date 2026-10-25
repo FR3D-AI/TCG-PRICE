@@ -157,3 +157,21 @@ test('álbum: páginas de 9 bolsillos', () => {
   assert.equal(toPages(Array(10).fill(0)).length, 2);
   assert.equal(toPages(Array(10).fill(0))[1].length, 1);
 });
+
+import { recordPoint } from '../js/notify.js';
+
+test('notificaciones: avisa solo si cambia más del umbral', () => {
+  const cfg = { threshold: 3, minUsd: 0.25 };
+  let r = recordPoint(null, '2026-10-24', 10, cfg);
+  assert.equal(r.note, null);
+  assert.deepEqual(r.entry.pts, [['2026-10-24', 10]]);
+  r = recordPoint(r.entry, '2026-10-25', 10.2, cfg);          // +2%: sin aviso
+  assert.equal(r.note, null);
+  r = recordPoint(r.entry, '2026-10-26', 11.5, cfg);          // +12,7%: aviso
+  assert.equal(r.note.pct, 12.7);
+  assert.equal(r.note.from, 10.2);
+  r = recordPoint(r.entry, '2026-10-26', 9, cfg);             // mismo día: reemplaza, compara con ayer
+  assert.equal(r.entry.pts.length, 3);
+  assert.equal(r.note.pct, -11.8);
+  assert.equal(recordPoint(r.entry, '2026-10-27', 9.1, { threshold: 1, minUsd: 0.25 }).note, null); // cambio < $0,25
+});
