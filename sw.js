@@ -1,5 +1,5 @@
 // Service worker: la app abre al instante y funciona sin señal con lo último que viste.
-const SHELL = 'tasador-shell-v10';
+const SHELL = 'tasador-shell-v11';
 const DATA = 'tasador-data-v1';
 const FILES = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/card-back.svg',
   'js/app.js', 'js/api.js', 'js/config.js', 'js/logic.js', 'js/scan.js', 'js/identify.js', 'js/chart.js', 'js/timeline.js', 'js/signals.js', 'js/photos.js', 'js/albums.js', 'js/tiers.js', 'js/pokecover.js', 'data/history/index.json'];
@@ -34,7 +34,7 @@ self.addEventListener('fetch', e => {
   }
   // Archivos de la app: red primero, caché si no hay señal.
   if (sameOrigin) {
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req)));
