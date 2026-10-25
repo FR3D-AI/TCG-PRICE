@@ -98,13 +98,19 @@ export async function openViewer(id, base, tier, opts = {}) {
   const v = document.createElement('div');
   v.className = 'viewer';
   v.innerHTML = `<div class="viewer-bar"><span class="viewer-note">Cargando…</span><button type="button" class="viewer-close" aria-label="Cerrar">×</button></div>
-    <div class="viewer-stage"><div class="viewer-frame ${tier ? `tier-wrap tier-${tier}` : ''}"><span class="pic viewer-pic"><img alt="Carta en pantalla completa"></span></div></div>
+    <div class="viewer-stage"><div class="viewer-tilt ${tier ? 'has-tier' : ''}">
+      <i class="vt-edge" style="--z:-1px"></i><i class="vt-edge" style="--z:-2px"></i><i class="vt-edge" style="--z:-3px"></i><i class="vt-edge" style="--z:-4px"></i><i class="vt-edge" style="--z:-5px"></i>
+      <div class="viewer-back" aria-hidden="true"><div class="vb-inner"><b>Tasador</b><small>TCG</small></div></div>
+      <div class="viewer-frame ${tier ? `tier-wrap tier-${tier}` : ''}"><span class="pic viewer-pic"><img alt="Carta en pantalla completa" draggable="false"></span></div>
+      <i class="vt-glare"></i>
+    </div></div>
     ${opts.caption ? `<p class="viewer-cap">${esc(opts.caption)}</p>` : ''}
-    <p class="viewer-hint">Toca dos veces para acercar · pellizca para hacer zoom${opts.link ? ` · <a href="${esc(opts.link)}" class="viewer-link">Ver ficha completa ›</a>` : ''}</p>`;
+    <p class="viewer-hint">Arrastra para girar la carta · <button type="button" class="viewer-spin">↻ Girar</button> · toca dos veces para acercar${opts.link ? ` · <a href="${esc(opts.link)}" class="viewer-link">Ver ficha completa ›</a>` : ''}</p>`;
   document.body.appendChild(v);
   document.documentElement.classList.add('no-scroll');
   const img = v.querySelector('img'), note = v.querySelector('.viewer-note'), stage = v.querySelector('.viewer-stage');
-  const close = () => { v.remove(); document.documentElement.classList.remove('no-scroll'); };
+  let raf = 0;
+  const close = () => { cancelAnimationFrame(raf); v.remove(); document.documentElement.classList.remove('no-scroll'); };
   v.querySelector('.viewer-close').onclick = close;
   v.querySelector('.viewer-link')?.addEventListener('click', close);
   document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
@@ -122,10 +128,87 @@ export async function openViewer(id, base, tier, opts = {}) {
   img.onload = () => { note.textContent += ` · ${img.naturalWidth}×${img.naturalHeight}`; };
   if (tier && TIERS[tier]) note.insertAdjacentHTML('beforebegin', `<span class="tier-badge tb-${tier} viewer-tier">${TIERS[tier].icon} ${TIERS[tier].label}</span>`);
 
+  // Giro 3D: arrastra con un dedo (o el mouse) para inclinar y dar vuelta la carta.
+  const tilt = v.querySelector('.viewer-tilt');
+  let rx = 0, ry = 0, vx = 0, vy = 0, drag = null, spinning = false;
+  const paint = () => {
+    tilt.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    const a = ((ry % 360) + 360) % 360;
+    tilt.style.setProperty('--gx', `${50 - Math.sin(ry * Math.PI / 180) * 60}%`);
+    tilt.style.setProperty('--gy', `${50 + Math.sin(rx * Math.PI / 180) * 70}%`);
+    tilt.style.setProperty('--gl', String(Math.min(1, (Math.abs(Math.sin(ry * Math.PI / 180)) + Math.abs(Math.sin(rx * Math.PI / 180))) * 1.4)));
+    tilt.classList.toggle('flipped', a > 90 && a < 270);
+  };
+  const settle = () => {
+    cancelAnimationFrame(raf);
+    const target = Math.round(ry / 180) * 180;
+    const step = () => {
+      vy = (vy + (target - ry) * 0.06) * 0.82;
+      vx = (vx + (0 - rx) * 0.06) * 0.82;
+      ry += vy; rx += vx;
+      if (Math.abs(target - ry) < 0.05 && Math.abs(rx) < 0.05 && Math.abs(vy) < 0.05) {
+        ry = ((target % 360) + 360) % 360; rx = 0; vx = vy = 0; paint(); return;
+      }
+      paint(); raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  };
+  const pointers = new Set();
+  stage.addEventListener('pointerdown', e => {
+    pointers.add(e.pointerId);
+    if (zoomed || pointers.size > 1 || spinning) { drag = null; return; }
+    cancelAnimationFrame(raf);
+    drag = { x: e.clientX, y: e.clientY, rx, ry, t: e.timeStamp, lx: e.clientX, ly: e.clientY, moved: false };
+    vx = vy = 0;
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!drag || zoomed || pointers.size > 1) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+    if (!drag.moved) { drag.moved = true; try { stage.setPointerCapture(e.pointerId); } catch { /* nada */ } }
+    const w = Math.max(240, tilt.offsetWidth);
+    const nry = drag.ry + dx / w * 200;
+    const nrx = Math.max(-65, Math.min(65, drag.rx - dy / w * 160));
+    vy = nry - ry; vx = nrx - rx; drag.lt = e.timeStamp;
+    ry = nry; rx = nrx;
+    paint();
+  });
+  const end = e => {
+    pointers.delete(e.pointerId);
+    if (!drag) return;
+    const moved = drag.moved, still = e.timeStamp - (drag.lt || 0) > 70; drag = null;
+    if (!moved) return;
+    if (still) { vx = vy = 0; settle(); return; } // soltó sin mover: vuelve suave a la cara más cercana
+    vy *= 0.6; vx *= 0.6;
+    // Inercia: un movimiento rápido sigue girando antes de asentarse.
+    let n = 0;
+    const coast = () => {
+      ry += vy; rx = Math.max(-65, Math.min(65, rx + vx));
+      vy *= 0.93; vx *= 0.85; paint();
+      if (Math.abs(vy) > 0.6 && n++ < 90) raf = requestAnimationFrame(coast); else settle();
+    };
+    raf = requestAnimationFrame(coast);
+  };
+  stage.addEventListener('pointerup', end);
+  stage.addEventListener('pointercancel', end);
+  v.querySelector('.viewer-spin').onclick = () => {
+    if (zoomed || spinning) return;
+    cancelAnimationFrame(raf); spinning = true;
+    const from = ry, t0 = performance.now();
+    const go = now => {
+      const k = Math.min(1, (now - t0) / 1600), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      ry = from + 360 * e; rx = Math.sin(k * Math.PI) * 12; paint();
+      if (k < 1) raf = requestAnimationFrame(go); else { spinning = false; ry = ((ry % 360) + 360) % 360; rx = 0; paint(); }
+    };
+    raf = requestAnimationFrame(go);
+  };
+  paint();
+
   // Doble toque: alterna zoom 2.5x centrado donde tocaste.
   let zoomed = false, last = 0;
   const toggle = (x, y) => {
     zoomed = !zoomed;
+    cancelAnimationFrame(raf); rx = 0; ry = 0; vx = vy = 0; paint();
     stage.classList.toggle('zoomed', zoomed);
     if (zoomed) {
       const r = img.getBoundingClientRect();
@@ -135,8 +218,8 @@ export async function openViewer(id, base, tier, opts = {}) {
       });
     }
   };
-  img.addEventListener('dblclick', e => toggle(e.clientX, e.clientY));
-  img.addEventListener('touchend', e => {
+  tilt.addEventListener('dblclick', e => toggle(e.clientX, e.clientY));
+  tilt.addEventListener('touchend', e => {
     const now = Date.now();
     if (now - last < 300 && e.changedTouches[0]) { e.preventDefault(); toggle(e.changedTouches[0].clientX, e.changedTouches[0].clientY); }
     last = now;
