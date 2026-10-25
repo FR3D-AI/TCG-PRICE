@@ -1,6 +1,8 @@
 // Fotos de cartas: imagen oficial, foto sustituta ("+" cuando no hay oficial) y visor en pantalla completa.
 // La foto sustituta se guarda en este celular: una miniatura rápida (localStorage) y la versión
 // en alta resolución hasta Full HD (IndexedDB). Se borra sola cuando aparece la imagen oficial.
+import { TIERS } from './tiers.js';
+
 const KEY = 'tasador:foto:';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -92,11 +94,11 @@ function pick(id) {
 }
 
 // ---------- Visor en pantalla completa ----------
-async function openViewer(id, base) {
+async function openViewer(id, base, tier) {
   const v = document.createElement('div');
   v.className = 'viewer';
   v.innerHTML = `<div class="viewer-bar"><span class="viewer-note">Cargando…</span><button type="button" class="viewer-close" aria-label="Cerrar">×</button></div>
-    <div class="viewer-stage"><img alt="Carta en pantalla completa"></div>
+    <div class="viewer-stage"><div class="viewer-frame ${tier ? `tier-wrap tier-${tier}` : ''}"><span class="pic viewer-pic"><img alt="Carta en pantalla completa"></span></div></div>
     <p class="viewer-hint">Toca dos veces para acercar · pellizca para hacer zoom</p>`;
   document.body.appendChild(v);
   document.documentElement.classList.add('no-scroll');
@@ -116,6 +118,7 @@ async function openViewer(id, base) {
     note.textContent = full ? 'Tu foto · alta resolución' : 'Tu foto';
   }
   img.onload = () => { note.textContent += ` · ${img.naturalWidth}×${img.naturalHeight}`; };
+  if (tier && TIERS[tier]) note.insertAdjacentHTML('beforebegin', `<span class="tier-badge tb-${tier} viewer-tier">${TIERS[tier].icon} ${TIERS[tier].label}</span>`);
 
   // Doble toque: alterna zoom 2.5x centrado donde tocaste.
   let zoomed = false, last = 0;
@@ -159,6 +162,10 @@ export function initPhotos() {
     e.preventDefault(); e.stopPropagation();
     if (add) pick(add.dataset.photoAdd);
     else if (del) { removePhoto(del.dataset.photoDel); refresh(del.dataset.photoDel); }
-    else openViewer(full.dataset.photoFull, full.dataset.base);
+    else {
+      const tw = full.closest('.tier-wrap');
+      const tier = tw ? [...tw.classList].find(c => c.startsWith('tier-') && c !== 'tier-wrap')?.slice(5) : null;
+      openViewer(full.dataset.photoFull, full.dataset.base, tier);
+    }
   }, true);
 }
