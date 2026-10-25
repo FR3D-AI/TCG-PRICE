@@ -148,3 +148,12 @@ test('niveles de rareza', () => {
   assert.equal(tierOf({ rarity: 'Poco común' }), 'pococomun');
   assert.equal(tierOf({ rarity: '', name: 'Fire Energy', category: 'Energy' }), 'muycomun');
 });
+
+import { toPages } from '../js/albums.js';
+
+test('álbum: páginas de 9 bolsillos', () => {
+  assert.equal(toPages([]).length, 1);
+  assert.equal(toPages(Array(9).fill(0)).length, 1);
+  assert.equal(toPages(Array(10).fill(0)).length, 2);
+  assert.equal(toPages(Array(10).fill(0))[1].length, 1);
+});

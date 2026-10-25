@@ -329,3 +329,80 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
 .viewer-bar .viewer-tier, .viewer-bar .viewer-note { grid-column: 1; justify-self: start; }
 .viewer-bar .viewer-close { grid-column: 2; grid-row: 1 / span 2; }
 .viewer-tier { font-size: .72rem; padding: 3px 10px; margin-right: 6px; cursor: default; }
+
+/* ===== Álbum tipo carpeta de cartas ===== */
+.album-nav { display: flex; justify-content: space-between; align-items: center; }
+.album-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+.album-tools select { flex: 1 1 160px; font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.seg { display: inline-flex; background: var(--panel2); border-radius: 10px; padding: 3px; }
+.seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: .85rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.seg button.on { background: var(--panel); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+
+/* Portada */
+.albums { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.album-shelf { display: flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.album-shelf small { color: var(--muted); font-size: .76rem; text-align: center; }
+.cover-stage { perspective: 1400px; display: flex; justify-content: center; margin: 6px 0 16px; }
+.cover { position: relative; display: flex; width: min(320px, 86vw); aspect-ratio: 3/4; border-radius: 10px 16px 16px 10px; background: var(--cover, #1e3a8a); color: #fff; overflow: hidden; cursor: pointer;
+  box-shadow: inset -6px 0 12px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.08), 0 18px 30px rgba(0,0,0,.35);
+  transform-origin: left center; transition: transform .65s cubic-bezier(.4,.1,.3,1), box-shadow .65s; }
+.cover.mini { width: 100%; cursor: pointer; border-radius: 6px 10px 10px 6px; box-shadow: inset -4px 0 8px rgba(0,0,0,.25), 0 8px 16px rgba(0,0,0,.25); }
+.cover.opening { transform: rotateY(-115deg); box-shadow: 0 0 0 rgba(0,0,0,0); }
+.cover::before { content: ''; position: absolute; inset: 0; pointer-events: none; }
+.cover.pat-puntos::before { background: radial-gradient(rgba(255,255,255,.14) 1.5px, transparent 1.6px) 0 0 / 14px 14px; }
+.cover.pat-rayas::before { background: repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 8px, transparent 8px 16px); }
+.cover.pat-cuero::before { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.12), transparent 55%), repeating-radial-gradient(circle at 40% 40%, rgba(0,0,0,.07) 0 1px, transparent 1px 4px); box-shadow: inset 0 0 0 7px transparent; outline: 2px dashed rgba(255,255,255,.28); outline-offset: -9px; }
+.cover.pat-holo::before { background: linear-gradient(115deg, rgba(255,0,128,.28), rgba(0,255,255,.28), rgba(255,255,0,.28), rgba(128,0,255,.28)); background-size: 300% 100%; mix-blend-mode: screen; animation: tier-holo 6s linear infinite; }
+.cover-spine { flex: 0 0 14%; background: rgba(0,0,0,.28); border-right: 1px solid rgba(255,255,255,.12); display: flex; flex-direction: column; justify-content: space-around; align-items: center; }
+.cover-spine i { width: 40%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1f5f9, #64748b); box-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.cover.mini .cover-spine i { width: 46%; }
+.cover-face { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px; text-align: center; }
+.cover-emblem { font-size: 4.2rem; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
+.cover.mini .cover-emblem { font-size: 2.2rem; }
+.cover-card { width: 52%; transform: rotate(-4deg); filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+.cover-card .pic { border-radius: 6px; }
+.cover-title { font-size: 1.35rem; font-weight: 800; letter-spacing: .02em; text-shadow: 0 2px 6px rgba(0,0,0,.45); padding: 4px 12px; border-top: 2px solid rgba(255,255,255,.5); border-bottom: 2px solid rgba(255,255,255,.5); }
+.cover.mini .cover-title { font-size: .85rem; padding: 2px 6px; border-width: 1px; }
+.cover-meta { font-size: .8rem; opacity: .85; }
+
+/* Páginas */
+.binder { position: relative; perspective: 1600px; display: flex; background: linear-gradient(90deg, #1f2937, #111827); border-radius: 14px; padding: 10px 10px 10px 26px; box-shadow: 0 14px 28px rgba(0,0,0,.35); outline: none; touch-action: pan-y; }
+.binder-rings { position: absolute; left: 6px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-around; z-index: 3; }
+.binder-rings i { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #cbd5e1; background: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.binder-page, .binder-flip { flex: 1; background: linear-gradient(180deg, #f8fafc, #e2e8f0); border-radius: 6px 10px 10px 6px; padding: 10px; box-shadow: inset 6px 0 10px -6px rgba(0,0,0,.35); }
+:root:not([data-theme="light"]) .binder-page, :root:not([data-theme="light"]) .binder-flip { }
+@media (prefers-color-scheme: dark) { .binder-page, .binder-flip { background: linear-gradient(180deg, #2a2f3a, #20242d); } }
+.binder-flip { position: absolute; top: 10px; bottom: 10px; left: 26px; right: 10px; z-index: 2; transform-origin: left center; backface-visibility: hidden; transition: transform .6s cubic-bezier(.45,.05,.3,1), filter .6s; }
+.binder-flip.fwd { transform: rotateY(0deg); }
+.binder-flip.fwd.go { transform: rotateY(-180deg); filter: brightness(.6); }
+.binder-flip.back { transform: rotateY(-180deg); filter: brightness(.6); }
+.binder-flip.back.go { transform: rotateY(0deg); filter: none; }
+.pockets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pocket { position: relative; display: block; aspect-ratio: 63/92; border: 0; padding: 4px; border-radius: 6px; cursor: pointer; font: inherit;
+  background: linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,.15) 40%, rgba(255,255,255,.35)); box-shadow: inset 0 0 0 1px rgba(148,163,184,.55), inset 0 -8px 10px -8px rgba(0,0,0,.25); }
+.pocket.empty { cursor: default; background: rgba(148,163,184,.12); box-shadow: inset 0 0 0 1px rgba(148,163,184,.35); }
+.pocket::after { content: ''; position: absolute; inset: 0; border-radius: 6px; pointer-events: none; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 45%, transparent 60%); }
+.pocket .tier-wrap.small { width: 100%; }
+.pocket-tag { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); font-size: .6rem; font-weight: 800; background: rgba(0,0,0,.72); color: #fff; padding: 1px 6px; border-radius: 6px; white-space: nowrap; z-index: 2; }
+.page-num { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 8px; font-weight: 700; }
+.binder-ctrl { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 4px; }
+.binder-ctrl .btn:disabled { opacity: .35; cursor: default; }
+
+/* Personalizar */
+.cust-preview { width: 150px; margin: 4px auto 12px; }
+.cust-label { display: block; font-weight: 700; font-size: .85rem; margin: 10px 0 6px; }
+.cust-label input { margin-top: 4px; font-weight: 400; }
+.cust-colors { display: flex; flex-wrap: wrap; gap: 8px; }
+.cust-colors button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+.cust-colors button.on { border-color: var(--text); }
+.cust-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cust-chips .chip { border: 2px solid transparent; cursor: pointer; font: inherit; font-size: .85rem; color: var(--text); }
+.cust-chips .chip.on { border-color: var(--accent); }
+.sheet-box select { width: 100%; font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 9px; }
+
+/* Visor: pie con nombre y enlace */
+.viewer-cap { color: #eee; text-align: center; font-size: .85rem; font-weight: 600; margin: 8px 12px 0; }
+.viewer-link { color: #93c5fd; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) { .cover, .binder-flip { transition: none; } .cover.pat-holo::before { animation: none; } }
+.binder-flip, .binder-flip * { -webkit-backface-visibility: hidden; backface-visibility: hidden; }

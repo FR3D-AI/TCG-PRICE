@@ -94,17 +94,19 @@ function pick(id) {
 }
 
 // ---------- Visor en pantalla completa ----------
-async function openViewer(id, base, tier) {
+export async function openViewer(id, base, tier, opts = {}) {
   const v = document.createElement('div');
   v.className = 'viewer';
   v.innerHTML = `<div class="viewer-bar"><span class="viewer-note">Cargando…</span><button type="button" class="viewer-close" aria-label="Cerrar">×</button></div>
     <div class="viewer-stage"><div class="viewer-frame ${tier ? `tier-wrap tier-${tier}` : ''}"><span class="pic viewer-pic"><img alt="Carta en pantalla completa"></span></div></div>
-    <p class="viewer-hint">Toca dos veces para acercar · pellizca para hacer zoom</p>`;
+    ${opts.caption ? `<p class="viewer-cap">${esc(opts.caption)}</p>` : ''}
+    <p class="viewer-hint">Toca dos veces para acercar · pellizca para hacer zoom${opts.link ? ` · <a href="${esc(opts.link)}" class="viewer-link">Ver ficha completa ›</a>` : ''}</p>`;
   document.body.appendChild(v);
   document.documentElement.classList.add('no-scroll');
   const img = v.querySelector('img'), note = v.querySelector('.viewer-note'), stage = v.querySelector('.viewer-stage');
   const close = () => { v.remove(); document.documentElement.classList.remove('no-scroll'); };
   v.querySelector('.viewer-close').onclick = close;
+  v.querySelector('.viewer-link')?.addEventListener('click', close);
   document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
 
   if (base) {
