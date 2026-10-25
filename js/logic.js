@@ -161,13 +161,30 @@ export function pickArchiveSeries(archive) {
 /** Convierte el historial propio (GitHub Actions) en serie USD. */
 export function ownSeries(own, fx) {
   if (!own?.points?.length) return null;
+  const order = ['holofoil', 'normal', '1st-edition-holofoil', 'reverse-holofoil'];
   const points = own.points.map(p => {
-    const vals = Object.values(p.tcgplayer || {}).filter(x => x != null);
-    let usd = vals.length ? Math.max(...vals) : null;
+    // Misma variante que usa el precio de referencia de la app (así no hay saltos al unir fuentes).
+    const tp = p.tcgplayer || {};
+    const k = order.find(v => tp[v] != null) ?? Object.keys(tp).find(v => tp[v] != null);
+    let usd = k != null ? tp[k] : null;
     if (usd == null && p.cardmarket?.trend != null && fx?.EUR) usd = p.cardmarket.trend / fx.EUR;
     return { date: p.date, usd };
   }).filter(p => p.usd != null).sort((a, b) => a.date.localeCompare(b.date));
   return points.length ? { label: 'Tu historial diario', points } : null;
+}
+
+/**
+ * Une tu historial de GitHub con el que guarda el celular, día por día.
+ * Si ambos tienen el mismo día, manda GitHub (lo toma un servidor a la misma hora todos los días).
+ */
+export function mergeOwn(github, phonePts) {
+  const m = new Map();
+  for (const [date, usd] of phonePts || []) if (usd > 0) m.set(date, { date, usd, src: 'celular' });
+  for (const p of github?.points || []) if (p.usd > 0) m.set(p.date, { date: p.date, usd: p.usd, src: 'github' });
+  const points = [...m.values()].sort((a, b) => a.date.localeCompare(b.date));
+  if (!points.length) return null;
+  const g = points.some(p => p.src === 'github'), c = points.some(p => p.src === 'celular');
+  return { label: `Tu historial diario${g && c ? ' (GitHub + celular)' : g ? ' (GitHub)' : ' (celular)'}`, points };
 }
 
 /** Quita valores atípicos (ventas sueltas muy fuera de rango) con la regla de la mediana. */

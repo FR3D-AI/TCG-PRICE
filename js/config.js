@@ -4,6 +4,7 @@ const KEY = 'tasador:config';
 const DEFAULTS = {
   workerUrl: '',        // ej. https://tasador-api.tu-usuario.workers.dev (opcional)
   githubRepo: '',       // ej. tu-usuario/tasador-tcg (para el historial diario)
+  githubToken: '',      // token fine-grained solo para ese repositorio (Contents: Read and write)
   fxOverride: null,     // { CLP: 950, EUR: 0.92 } si quieres fijar el cambio a mano
 };
 

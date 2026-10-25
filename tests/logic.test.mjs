@@ -175,3 +175,19 @@ test('notificaciones: avisa solo si cambia más del umbral', () => {
   assert.equal(r.note.pct, -11.8);
   assert.equal(recordPoint(r.entry, '2026-10-27', 9.1, { threshold: 1, minUsd: 0.25 }).note, null); // cambio < $0,25
 });
+
+import { mergeOwn } from '../js/logic.js';
+import { mergeWatchlist } from '../js/cloudsync.js';
+
+test('historial: une GitHub y celular, manda GitHub el mismo día', () => {
+  const r = mergeOwn({ points: [{ date: '2026-10-02', usd: 5 }, { date: '2026-10-03', usd: 6 }] }, [['2026-10-01', 4], ['2026-10-03', 9]]);
+  assert.deepEqual(r.points.map(p => [p.date, p.usd]), [['2026-10-01', 4], ['2026-10-02', 5], ['2026-10-03', 6]]);
+  assert.match(r.label, /GitHub \+ celular/);
+  assert.equal(mergeOwn(null, []), null);
+});
+
+test('seguimiento: suma cartas sin quitar las que ya estaban', () => {
+  const r = mergeWatchlist(['a', 'b'], ['b', 'c']);
+  assert.deepEqual(r.merged, ['a', 'b', 'c']);
+  assert.equal(r.added, 1);
+});

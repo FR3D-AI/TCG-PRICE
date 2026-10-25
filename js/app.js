@@ -7,10 +7,11 @@ import { renderSignals } from './signals.js';
 import { cardPic, initPhotos } from './photos.js';
 import { openAlbumPicker, viewAlbums, viewAlbum, albumsOf } from './albums.js';
 import { tierOf, tierBadge, initTierBadges } from './tiers.js';
-import { initNotify, viewNotifications, myLogHtml, dailyUpdate } from './notify.js';
+import { initNotify, viewNotifications, myLogHtml, dailyUpdate, loadLog } from './notify.js';
+import { initCloudSync, syncWatchlist, describeSync, repoOf } from './cloudsync.js';
 import {
   summarizePricing, referenceUsd, momentum, pickArchiveSeries, ownSeries, dropOutliers,
-  yearly, weekly, spanishEstimate, median, fmt,
+  yearly, weekly, spanishEstimate, median, fmt, mergeOwn,
 } from './logic.js';
 
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -34,6 +35,7 @@ function remember(card) {
 initPhotos();
 initTierBadges();
 initNotify();
+initCloudSync();
 window.addEventListener('hashchange', route);
 route();
 
@@ -232,7 +234,7 @@ async function loadHistory(card, fx) {
     ownHistory(card.id),
   ]);
   const a = pickArchiveSeries(archive);
-  const o = ownSeries(own, fx);
+  const o = mergeOwn(ownSeries(own, fx), loadLog()[card.id]?.pts);
   const series = [];
   if (a) series.push({ label: `Archivo TCGplayer · ${a.label}`, points: dropOutliers(a.points) });
   if (o) series.push(o);
@@ -240,7 +242,7 @@ async function loadHistory(card, fx) {
   if (!series.length) {
     box.innerHTML = `<h2>Cómo ha cambiado su valor</h2><div id="timeline"></div>
       <p>Todavía no hay historial gratuito de ventas para esta carta. El archivo público cubre sets en inglés hasta septiembre 2024.</p>
-      <p class="muted">Síguela (botón de abajo) y la app guardará su precio cada día desde hoy.</p>`;
+      <p class="muted">Agrégala a un álbum y la app guardará su precio cada día desde hoy (en el celular y en GitHub).</p>`;
     renderTimeline($('#timeline'), card, fx, series, now);
     renderSignals($('#signals'), card, fx, series, now);
     return;
@@ -256,7 +258,7 @@ async function loadHistory(card, fx) {
       ${rows.map(r => `<tr><td>${r.year}</td><td><b>${fmt.usd(r.avg)}</b></td><td>${fmt.usd(r.min)} – ${fmt.usd(r.max)}</td><td class="${r.changePct > 0 ? 'up' : r.changePct < 0 ? 'down' : ''}">${fmt.pct(r.changePct)}</td></tr>`).join('')}
       ${now != null ? `<tr class="now"><td>Hoy</td><td><b>${fmt.usd(now)}</b></td><td>mercado actual</td><td class="${vsNow > 0 ? 'up' : vsNow < 0 ? 'down' : ''}">${fmt.pct(vsNow)}</td></tr>` : ''}
     </tbody></table>
-    <p class="note">Precios en USD de ventas en TCGplayer. Se descartan ventas sueltas muy fuera de rango. El archivo público llega hasta sep 2024; desde que la sigues, se suma tu historial diario.</p>`;
+    <p class="note">Precios en USD de TCGplayer. Se descartan ventas sueltas muy fuera de rango. Un solo gráfico une 3 fuentes: el archivo público de TCGdex, tu registro diario en GitHub y el del celular (si ambos tienen el mismo día, manda GitHub).</p>`;
   renderTimeline($('#timeline'), card, fx, series, now);
   renderSignals($('#signals'), card, fx, series, now);
 }
@@ -378,11 +380,12 @@ function toggleWatch(c, btn) {
   if (list.some(w => w.id === c.id)) list = list.filter(w => w.id !== c.id);
   else list.push(c);
   store.set('watch', list);
+  window.dispatchEvent(new Event('tasador:albums')); // se suma solo al respaldo de GitHub
   const on = list.some(w => w.id === c.id);
   btn.textContent = on ? '✓ En seguimiento' : '+ Seguir esta carta';
   btn.classList.toggle('ghost', on);
-  if (on && !getConfig().githubRepo) toast('Guardada. Para el historial diario, conecta tu repositorio en Ajustes.');
-  else if (on) toast('Guardada. Sincronízala en “Seguimiento”.');
+  if (on && !getConfig().githubToken) toast('Guardada. Para el respaldo diario en GitHub, activa el token en Ajustes.');
+  else if (on) toast('Guardada. Se suma sola a tu historial diario en GitHub.');
 }
 
 function viewWatch() {
@@ -408,7 +411,7 @@ function viewConfig() {
   const c = getConfig();
   app.innerHTML = `<h1>Ajustes</h1>
     <form id="cfg" class="card-box form">
-      <label>Repositorio de GitHub<input name="githubRepo" placeholder="tu-usuario/tasador-tcg" value="${esc(c.githubRepo)}"></label>
+      <label>Repositorio de GitHub<input name="githubRepo" placeholder="${esc(repoOf({ githubRepo: '' }) || 'tu-usuario/TCG-PRICE')}" value="${esc(c.githubRepo)}"></label>
       <label>URL de tu API (Cloudflare Worker, opcional)<input name="workerUrl" placeholder="https://tasador-api.tu-usuario.workers.dev" value="${esc(c.workerUrl)}"></label>
       <fieldset><legend>Tipo de cambio manual (opcional)</legend>
         <label>CLP por 1 USD<input name="CLP" inputmode="decimal" value="${esc(c.fxOverride?.CLP ?? '')}"></label>
@@ -416,7 +419,35 @@ function viewConfig() {
       </fieldset>
       <button class="btn">Guardar</button>
       <button type="button" class="btn ghost" id="clear">Borrar caché de precios</button>
+    </form>
+
+    <form id="gh" class="card-box form">
+      <h2>Respaldo diario automático en GitHub</h2>
+      <p class="muted">Las cartas de tus álbumes se suman solas al seguimiento diario de tu repositorio <b>${esc(repoOf(c) || '—')}</b>. Así GitHub guarda su precio todos los días aunque no abras la app, y tu historial no se pierde si cambias de celular.</p>
+      <p class="sync-state" id="gh-state">${esc(describeSync())}</p>
+      <label>Token de GitHub<input name="githubToken" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(c.githubToken)}"></label>
+      <details class="tier-info"><summary>Cómo crear el token (2 minutos)</summary>
+        <ol class="steps">
+          <li>Abre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained token ↗</a>.</li>
+          <li><b>Token name:</b> TCG Latam · <b>Expiration:</b> 1 año (o la que prefieras).</li>
+          <li><b>Repository access:</b> “Only select repositories” → elige <b>${esc((repoOf(c) || 'TCG-PRICE').split('/').pop())}</b>.</li>
+          <li><b>Permissions → Repository permissions → Contents:</b> “Read and write”. Nada más.</li>
+          <li>Toca <b>Generate token</b>, cópialo y pégalo aquí arriba.</li>
+        </ol>
+        <p class="note">El token queda guardado solo en este celular y solo sirve para ese repositorio. Si lo pierdes o cambias de celular, crea uno nuevo.</p>
+      </details>
+      <button class="btn">Guardar y sincronizar</button>
+      ${c.githubToken ? '<button type="button" class="btn ghost" id="gh-off">Quitar token</button>' : ''}
     </form>`;
+  $('#gh').onsubmit = async e => {
+    e.preventDefault();
+    setConfig({ githubToken: new FormData(e.target).get('githubToken').trim() });
+    $('#gh-state').textContent = 'Sincronizando…';
+    const r = await syncWatchlist({ force: true });
+    $('#gh-state').textContent = describeSync();
+    toast(r.ok ? (r.added ? `Listo: ${r.added} ${r.added === 1 ? 'carta nueva' : 'cartas nuevas'} en seguimiento` : 'Listo: todo al día') : 'No se pudo sincronizar');
+  };
+  $('#gh-off')?.addEventListener('click', () => { setConfig({ githubToken: '' }); viewConfig(); });
   $('#cfg').onsubmit = e => {
     e.preventDefault();
     const f = new FormData(e.target);

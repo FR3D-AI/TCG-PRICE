@@ -11,7 +11,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 export function loadAlbums() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
 function saveAlbums(a) {
-  try { localStorage.setItem(KEY, JSON.stringify(a)); return true; }
+  try { localStorage.setItem(KEY, JSON.stringify(a)); window.dispatchEvent(new Event('tasador:albums')); return true; }
   catch { alert('No hay espacio para guardar más. Borra algunas fotos temporales o álbumes.'); return false; }
 }
 
